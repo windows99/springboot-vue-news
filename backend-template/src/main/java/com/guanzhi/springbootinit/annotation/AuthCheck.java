@@ -1,0 +1,26 @@
+package com.guanzhi.springbootinit.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * 权限校验
+ *
+ * @author 观止study
+ *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AuthCheck {
+
+    /**
+     * 必须有某个角色
+     *
+     * @return
+     */
+    String mustRole() default "";
+
+}
+

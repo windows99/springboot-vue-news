@@ -1,0 +1,154 @@
+/* pages/me/me.wxss */
+.container {
+  padding: 60px 13px 0;
+  background: linear-gradient(to bottom, #ffffff 10%, #f2f3f5);
+  font-size: 14px;
+
+  .unlogin {
+    display: flex;
+    padding: 8px;
+    align-items: center;
+
+    text {
+      margin-left: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+  }
+
+  .toMyInfo:active {
+    background-color: #f1f1f1;
+  }
+
+  .user {
+    display: flex;
+    justify-content: space-between;
+    height: 75px;
+
+    .user-info {
+      display: flex;
+      align-self: center;
+
+      .user-name {
+        margin: auto;
+        margin-left: 0;
+        margin-bottom: 0;
+        color: #2e2d32;
+        font-size: 17px;
+        font-weight: 600;
+      }
+
+      .user-tag {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-left: 6px;
+      }
+    }
+
+    .toInfo {
+      align-self: center;
+
+      text {
+        margin-right: 4px;
+        color: #848893;
+      }
+    }
+  }
+
+  .user-flag {
+    margin: auto;
+    margin-left: 0;
+    margin-top: 8px;
+    display: flex;
+    padding: 3px 5px;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 4px;
+  }
+
+  .user-normal {
+    background-color: #efefef;
+    color: #848893;
+  }
+
+  .user-vip {
+    background-color: #ffde66;
+    color: #d50101;
+  }
+
+  .vip-become {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-image: linear-gradient(96.27deg, #ffeec3 3.33%, #ffdbb0 45.52%, #ffc196 85.13%, #f8a2e6 109.28%);
+    height: 45px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px -1px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    padding: 0 10px;
+
+    .toPayPage {
+      width: 74px;
+      height: 32px;
+      font-size: 15px;
+      text-align: center;
+      line-height: 32px;
+      border-radius: 20px;
+      color: #734a24;
+      background: linear-gradient(90deg, #fde8c3, #edd3a7);
+    }
+
+    .vip-left {
+      display: flex;
+      align-items: center;
+
+      .vip-log {
+        width: 30px;
+        height: 30px;
+      }
+
+      .vip-desc {
+        color: #a21e05;
+        font-size: 16px;
+        margin-left: 5px;
+      }
+    }
+  }
+
+  .card {
+    margin-top: 10px;
+    background-color: #ffffff;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px -1px rgba(0, 0, 0, 0.1);
+
+    .title {
+      font-weight: 800;
+      font-size: 16px;
+      padding-left: 8px;
+      padding-top: 6px;
+    }
+  }
+}
+
+.van-grid-item__content {
+  background-color: transparent !important;
+  padding: 10px 6px !important;
+}
+
+.text-class {
+  color: #2e2d32 !important;
+  font-weight: 600;
+  font-size: 13px !important;
+}
+
+.grid-text-button {
+  border: 0;
+  outline: none;
+  /*清除默认背景 */
+  background-color: transparent;
+}

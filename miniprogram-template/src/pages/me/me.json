@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "van-image": "@vant/weapp/image/index",
+    "van-grid": "@vant/weapp/grid/index",
+    "van-grid-item": "@vant/weapp/grid-item/index",
+    "custrom-tab-bar": "../../components/custom-tab-bar/index",
+    "van-nav-bar": "@vant/weapp/nav-bar/index",
+    "van-icon": "@vant/weapp/icon/index"
+  }
+}

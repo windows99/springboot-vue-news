@@ -1,0 +1,72 @@
+<view class="container">
+  <!-- 未登录 -->
+  <view bind:tap="login" wx:if="{{!user}}">
+    <view class="unlogin">
+      <van-image width="50" height="50" round src="/assets/imgs/login.jpg" />
+      <text>登录/注册</text>
+    </view>
+  </view>
+  <!-- 已登录 -->
+  <view wx:else class="user" bind:tap="toDetailNeedLogin" data-page="myInfo">
+    <view class="user-info">
+      <van-image width="50" height="50" round src="{{user.userAvatar}}" />
+      <view class="user-tag">
+        <view class="user-name">{{user.userName}}</view>
+        <view class="user-flag {{user.userRole === 'user' ?'user-normal':'user-vip'}}">{{user.userRole === 'user' ?"普通用户": "心悦会员"}} </view>
+      </view>
+    </view>
+    <view class="toInfo">
+      <text>个人信息</text>
+      <van-icon size="14" color="#c1c1c1" name="arrow" />
+    </view>
+  </view>
+  <!-- 会员开通 -->
+  <view bind:tap="toDetailNeedLogin" data-page="vipPay" class="vip-become">
+    <view class="vip-left">
+      <image src="../../assets/imgs/vip.png" class="vip-log" />
+      <text class="vip-desc">解锁更多权益！</text>
+    </view>
+    <view class="toPayPage">会员中心</view>
+  </view>
+
+  <view class="bottom">
+    <!-- 生活工具 -->
+    <view class="card">
+      <view class="title">
+        小工具
+      </view>
+      <view>
+        <van-grid clickable column-num="4" border="{{ false }}">
+          <van-grid-item bind:tap="toDetailNotLogin" data-page="eatCoupon" text-class="text-class" icon="coupon-o" text="外卖红包" />
+          <van-grid-item bind:tap="toDetailNotLogin" data-page="pointCalculate" text-class="text-class" icon="chart-trending-o" text="绩点计算器" />
+          <van-grid-item bind:tap="toDetailNotLogin" data-page="cycle-clock" text-class="text-class" icon="underway-o" text="循环时钟" />
+        </van-grid>
+      </view>
+    </view>
+    <!-- 关于平台 -->
+    <view class="card">
+      <view class="title">
+        其他
+      </view>
+      <view>
+        <van-grid clickable column-num="4" border="{{ false }}">
+          <van-grid-item bind:tap="toDetailNeedLogin" data-page="myFeedback" text-class="text-class" icon="records" text="意见反馈" />
+          <van-grid-item bind:click="clearTemp" text-class="text-class" icon="close" text="清除缓存" />
+          <van-grid-item url="../../pages/private/private?type=userAgreement" text-class="text-class" icon="label-o" text="用户协议" />
+          <van-grid-item url="../../mePages/pages/about-platform/about-platform" text-class="text-class" icon="friends-o" text="关于平台" />
+          <van-grid-item bind:tap="toDetailNeedLogin" data-page="support" text-class="text-class" icon="balance-o" text="充值积分" />
+          <van-grid-item url="../guide/guide" text-class="text-class" icon="guide-o" text="使用指南" />
+          <van-grid-item wx:if="{{user.userRole==='admin'}}" bind:tap="toDetailNeedLogin" data-page="articleReview" text-class="text-class" icon="manager-o" text="审核中心" />
+          <van-grid-item icon="service-o" text-class="text-class">
+            <view slot="text">
+              <text class="text-class van-grid-item__text">人工客服</text>
+              <button style="position: absolute;opacity: 0;margin-top: -45px;" open-type="contact">kefu</button>
+            </view>
+          </van-grid-item>
+        </van-grid>
+      </view>
+    </view>
+  </view>
+</view>
+<van-dialog id="van-dialog" />
+<custrom-tab-bar id="footer-nav-bar" />
