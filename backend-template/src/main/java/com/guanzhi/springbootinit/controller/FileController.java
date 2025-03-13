@@ -7,7 +7,6 @@ import com.guanzhi.springbootinit.common.ErrorCode;
 import com.guanzhi.springbootinit.common.ResultUtils;
 import com.guanzhi.springbootinit.exception.BusinessException;
 import com.guanzhi.springbootinit.manager.file.FileManager;
-import com.guanzhi.springbootinit.model.dto.file.CompressFile;
 import com.guanzhi.springbootinit.model.dto.file.UploadFileRequest;
 import com.guanzhi.springbootinit.model.entity.User;
 import com.guanzhi.springbootinit.model.enums.FileUploadBizEnum;
@@ -40,6 +39,7 @@ public class FileController {  // 文件上传控制器
     @Resource  // 注入图片压缩服务
     private ImageCompressorServiceImpl imageCompressorServiceImpl;
 
+
     /**
      * 文件上传
      *
@@ -50,7 +50,7 @@ public class FileController {  // 文件上传控制器
      */
     // 文件上传接口
     @PostMapping("/upload")  // POST请求映射
-    public BaseResponse<String> uploadFile(
+    public BaseResponse<?> uploadFile(
             @RequestPart("file") MultipartFile multipartFile,  // 接收上传的文件
             UploadFileRequest uploadFileRequest,  // 上传请求参数
             HttpServletRequest request) {  // HTTP请求对象
@@ -60,10 +60,8 @@ public class FileController {  // 文件上传控制器
         if (fileUploadBizEnum == null) {  // 无效的业务类型
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        
         // 文件校验（大小、类型等）
         validFile(multipartFile, fileUploadBizEnum);
-        
         // 获取登录用户信息
         User loginUser = userService.getLoginUser(request);
         
@@ -87,7 +85,8 @@ public class FileController {  // 文件上传控制器
 //            } else {  // 无需压缩则直接上传原文件
 //                fileManager.putObject(filepath, file);
 //            }
-            
+
+
             // 返回完整的文件访问地址
             return ResultUtils.success(fileManager.getPathPrefix() + filepath);
         } catch (Exception e) {  // 异常处理

@@ -27,11 +27,11 @@ public class CodeUtils {
             // 创建邮箱对象
             SimpleEmail mail = new SimpleEmail();
             // 设置发送邮件的服务器
-            mail.setHostName("xxxxxxxxxxxxxxx");
+            mail.setHostName("smtp.163.com");
             // "你的邮箱号"+ "上文开启SMTP获得的授权码"
-            mail.setAuthentication("xxxxxxxxxxxxxxx", "xxxxxxxxxxxxxxx");
+            mail.setAuthentication("wsk_web@163.com", "VAW4XDpshcVxtNt8");
             // 发送邮件 "你的邮箱号"+"发送时用的昵称"
-            mail.setFrom("xxxxxxxxxxxxxxx", "quick-develop-template");
+            mail.setFrom("wsk_web@163.com", "王帅康的新闻网站");
             // 发送服务端口
             mail.setSslSmtpPort(String.valueOf(465));
             // 使用安全链接
@@ -43,7 +43,7 @@ public class CodeUtils {
             // 邮件的主题(标题)
             mail.setSubject("验证码");
             // 邮件的内容
-            mail.setMsg("【快速开发模板】您的验证码为:" + authCode + "(1分钟内有效)");
+            mail.setMsg("【王帅康的新闻网站】您的验证码为:" + authCode + "(1分钟内有效)");
             // 发送
             mail.send();
             return "发送成功,请注意查收";

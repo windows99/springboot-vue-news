@@ -1,5 +1,6 @@
 package com.guanzhi.springbootinit.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -68,7 +69,22 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Override
     public News getNewsById(Long newsId){
-        return newsMapper.selectById(newsId);
+        News news = newsMapper.selectById(newsId);
+        if (news == null) {
+            log.error("Failed to increment view count for news with id: {}");
+        }
+        news.setViewcount(news.getViewcount() + 1);
+
+        try {
+            newsMapper.updateById(news);
+        } catch (Exception e) {
+            log.error("Failed to increment view count for news with id: {}", newsId, e);
+            throw new RuntimeException("Failed to update view count", e);
+        }
+
+        // 将news的view_count加1，返回最新值
+
+        return news;
     }
 
 
@@ -87,9 +103,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public void updateNews(News news) {
         try {
-            System.out.println("修改功能");
-            System.out.println(news);
-            System.out.println("修改功能");
             newsMapper.updateById(news);
         } catch (Exception e) {
             log.error("Failed to update news: {}", e);

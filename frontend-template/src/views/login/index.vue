@@ -2,13 +2,8 @@
   <div class="main">
     <div class="flex-c absolute right-5 top-3">
       <!-- 主题 -->
-      <el-switch
-        v-model="dataTheme"
-        inline-prompt
-        :active-icon="dayIcon"
-        :inactive-icon="darkIcon"
-        @change="dataThemeChange"
-      />
+      <el-switch v-model="dataTheme" inline-prompt :active-icon="dayIcon" :inactive-icon="darkIcon"
+        @change="dataThemeChange" />
     </div>
     <div class="box">
       <Motion>
@@ -18,25 +13,16 @@
             <span>{{ title }}</span>
           </div>
           <div class="description">
-            仅整合一些常见的最最基础功能，比较适合全栈新手使用
+            要是追不上光，那就变成光吧。
           </div>
         </div>
       </Motion>
       <!--          登录表单-->
-      <Login
-        v-model:current-page="currentPage"
-        v-if="currentPage === 'login'"
-      />
+      <Login v-model:current-page="currentPage" v-if="currentPage === 'login'" />
       <!--          注册表单-->
-      <Register
-        v-model:current-page="currentPage"
-        v-if="currentPage === 'register'"
-      />
+      <Register v-model:current-page="currentPage" v-if="currentPage === 'register'" />
       <!--          找回密码表单-->
-      <Forget
-        v-model:current-page="currentPage"
-        v-if="currentPage === 'forget'"
-      />
+      <Forget v-model:current-page="currentPage" v-if="currentPage === 'forget'" />
       <!--      底部备案-->
       <div />
     </div>

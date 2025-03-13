@@ -1,7 +1,11 @@
 package com.guanzhi.springbootinit.controller;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.guanzhi.springbootinit.common.BaseResponse;
+import com.guanzhi.springbootinit.common.ResultUtils;
 import com.guanzhi.springbootinit.model.entity.Comment;
+import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.service.CommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,35 +24,21 @@ public class CommentController {
     private CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<?> addComment(@RequestBody Comment comment) {
-        try {
-            boolean result = commentService.addComment(comment);
-            if (result) {
-                return ResponseEntity.ok(Map.of("message", "Comment added successfully", "status", 200));
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "Failed to add comment", "status", 400));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", e.getMessage(), "status", 500));
-        }
+    public BaseResponse<Boolean> addComment(@RequestBody Comment comment) {
+        boolean result = commentService.addComment(comment);
+        return ResultUtils.success(result);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCommentById(@PathVariable Long id) {
-        try {
-            commentService.deleteCommentById(id);
-            return ResponseEntity.ok(Map.of("message", "Comment deleted successfully", "status", 200));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", e.getMessage(), "status", 500));
-        }
+    public BaseResponse<Boolean> deleteCommentById(@PathVariable Long id) {
+        boolean result = commentService.deleteCommentById(id);
+        return ResultUtils.success(result);
+        
     }
 
 
     @GetMapping("/list")
-    public ResponseEntity<?> getCommentList(
+    public BaseResponse<List<Comment>> getCommentList(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Long newsId,
@@ -62,28 +52,13 @@ public class CommentController {
         if (author != null && !author.isEmpty()) {
             params.put("author", author);
         }
-        try {
-            List<Comment> commentList = commentService.getCommentList(params);
-            return ResponseEntity.ok(commentList);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", "Failed to fetch comment list", "status", 500));
-        }
+        List<Comment> commentList = commentService.getCommentList(params);
+        return  ResultUtils.success(commentList);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCommentById(@PathVariable Long id) {
-        try {
-            Comment comment = commentService.getCommentById(id);
-            if (comment != null) {
-                return ResponseEntity.ok(comment);
-            } else {
-                return ResponseEntity.notFound()
-                        .build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", "Failed to fetch comment", "status", 500));
-        }
+    public BaseResponse<Comment> getCommentById(@PathVariable Long id) {
+        Comment comment = commentService.getCommentById(id);
+        return  ResultUtils.success(comment);
     }
 }

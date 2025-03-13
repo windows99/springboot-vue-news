@@ -1,9 +1,6 @@
 package com.guanzhi.springbootinit.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -56,6 +53,34 @@ public class Comment implements Serializable {
      */
     @TableLogic
     private Integer isDelete;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
+    }
+
+    /**
+     * 评论的用户名
+     */
+    @TableField(exist = false)
+    private String username;
+    /**
+     * 评论的用户头像
+     */
+    @TableField(exist = false)
+    private String userAvatar;
+
 
     public Long getId() {
         return id;

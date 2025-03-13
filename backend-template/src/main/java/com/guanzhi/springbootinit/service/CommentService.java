@@ -11,7 +11,7 @@ public interface CommentService extends IService<Comment> {
 
     boolean addComment(Comment comment);
 
-    void deleteCommentById(Long commentId);
+    boolean deleteCommentById(Long commentId);
 
     List<Comment> getCommentList(Map<String, Object> params);
 
