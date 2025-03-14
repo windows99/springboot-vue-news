@@ -62,7 +62,7 @@ const user = ref({
 
 onMounted(async () => {
   // await userStore.getUserProfile()
-  user.value = { ...userStore.userProfile }
+  // user.value = { ...userStore.userProfile }
 })
 
 const handleAvatarChange = (event) => {

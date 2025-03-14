@@ -3,7 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import RecommendView from '../views/RecommendView.vue'
 import HotView from '../views/HotView.vue'
 import NewsDetailView from '../views/NewsDetailView.vue'
-import ProfileView from '../views/ProfileView.vue'
+// import ProfileView from '../views/ProfileView.vue'
+import ProfileView from '../views/my/myInfo.vue'
 import LoginView from '../views/login/index.vue'
 
 const routes = [

@@ -29,6 +29,15 @@ export default {
       }
     },
     {
+      path: "/news/import",
+      name: "NewsImport",
+      component: () => import("@/views/news/import.vue"),
+      meta: {
+        title: "导入新闻",
+        hiddenTag: true
+      }
+    },
+    {
       path: '/news/detail/:id',
       name: 'NewsDetail',
       component: () => import('@/views/news/detail.vue'),
