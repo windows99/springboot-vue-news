@@ -10,8 +10,8 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-select v-model="selectedTag" placeholder="请选择新闻标签">
-              <el-option v-for="tag in tags" :key="tag" :label="tag" :value="tag" />
+            <el-select v-model="selectedTag" value-key="id" placeholder="请选择新闻标签">
+              <el-option v-for="tag in tags" :key="tag.id" :label="tag.tagname" :value="tag" />
             </el-select>
           </el-col>
 
@@ -22,14 +22,29 @@
               </el-icon>
               获取新闻
             </el-button>
+
+            <el-button type="success" :loading="loading.fetch" @click="ImportNews">
+              <el-icon>
+                <DocumentAdd />
+              </el-icon>
+              保存新闻
+            </el-button>
           </el-col>
         </el-row>
 
         <el-table v-if="newsList.length > 0" :data="newsList" style="width: 100%; margin-top: 20px">
-          <el-table-column prop="title" label="标题" />
-          <el-table-column prop="src" label="来源" />
-          <el-table-column prop="url" label="来源链接" />
-          <el-table-column prop="time" label="发布时间" />
+          <el-table-column prop="title" label="标题" show-overflow-tooltip />
+          <el-table-column prop="content" label="内容" show-overflow-tooltip />
+          <el-table-column prop="coverimage" label="封面图片">
+            <template #default="scope">
+              <el-image :src="scope.row.coverimage" style="width: 100px; height: 100px;" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="source" label="来源" />
+          <el-table-column prop="category" label="标签" />
+          <el-table-column prop="sourceurl" label="来源链接" show-overflow-tooltip />
+          <el-table-column prop="author" label="作者" />
+          <el-table-column prop="createtime" label="创建时间" />
         </el-table>
 
         <el-alert v-if="newsList.length === 0 && !loading.fetch" type="info" title="请先选择标签并获取新闻" show-icon
@@ -41,13 +56,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Download, Upload } from '@element-plus/icons-vue'
+import { Download, DocumentAdd } from '@element-plus/icons-vue'
 import axios from 'axios'
 // import { useNewsStore } from '@/stores/news'
 import { ElMessage } from 'element-plus'
 import {
   getTagListUsingGet
 } from '@/api/newsTagController'
+import { getJisunewsUsingGet, addNewsUsingPost } from '@/api/newsController'
 // 新闻标签选项
 const tags = ref()
 
@@ -68,52 +84,49 @@ const loading = ref({
 // 获取新闻
 const fetchNews = async () => {
   if (!selectedTag.value) {
-    ElMessage.warning('请先选择新闻标签')
+    ElMessage.error('请先选择新闻标签')
     return
   }
+  const res = await getJisunewsUsingGet({ channel: selectedTag.value.tagname });
 
-  loading.value.fetch = true
-  try {
-    axios.post('https://jisunews.market.alicloudapi.com/news/get', {
-      channel: '头条',
-      num: 20,
-      start: 0,
-    }, {
-      headers: {
-        'Authorization': 'APPCODE ' + '71f6a5c816cb4e33b91615b08b10f392'
-      }
-    })
-      .then(res => console.log(res))
-      .catch(err => console.log(err))
+  if (res.msg == "ok") {
+    newsList.value = res.result.list.map(item => ({
+      title: item.title,  // 标题
+      content: item.content,  // 内容
+      coverimage: item.pic,  // 封面图片
+      source: item.src,  // 来源
+      sourceurl: item.weburl,   // 来源链接
+      author: item.src, // 作者
+      createtime: item.time,  // 创建时间
+      category: selectedTag.value.id,     // 标签
+      commentcount: 0,
+      id: 0,
+      isdelete: 0,
+      likecount: 0,
+      status: 1,
+      viewcount: 0,
+      images: "",
+      updatetime: ''
 
-    // axios({
-    //   method: 'ANY',
-    //   url: 'https://jisunews.market.alicloudapi.com/news/get',
-    //   dataType: "json",
-    //   beforeSend: function (request) {	//向接口发送身份认证
-    //     request.setRequestHeader("Authorization", "APPCODE " + "71f6a5c816cb4e33b91615b08b10f392");//注意这里APPCODE后面有一个空格，不能删掉
-    //   },
-    //   data: {
-    //     channel: '头条',
-    //     num: 20,
-    //     start: 0,
-    //   }
-    // }).then(res => {
-    //   console.log(res)
-    // })
-
-    // 调用三方API获取新闻数据
-    const response = await fetch(``)
-    const data = await response.json()
-    newsList.value = data.map(item => ({
-      ...item,
-      publishTime: new Date(item.publishTime).toLocaleString()
     }))
-  } catch (error) {
-    // ElMessage.error('获取新闻失败，请稍后重试')
-  } finally {
-    loading.value.fetch = false
+  } else {
+    // ElMessage.error(res.msg)
   }
+
+
+}
+
+// 导入新闻
+const ImportNews = async () => {
+  if (newsList.value.length === 0) {
+    ElMessage.error('请先获取新闻')
+    return
+  }
+  newsList.value.forEach(async (element, index) => {
+    if (index > 5)
+      await addNewsUsingPost(element)
+  });
+
 }
 
 
@@ -124,7 +137,7 @@ onMounted(async () => {
   });
   const res = await getTagListUsingGet(queryRequest)
   if (res.code === 0) {
-    tags.value = res.data.map(item => item.tagname)
+    tags.value = res.data
   }
 })
 </script>

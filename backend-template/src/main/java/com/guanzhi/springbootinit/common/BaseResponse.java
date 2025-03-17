@@ -7,8 +7,10 @@ import lombok.Data;
  * 通用返回类
  *
  * @param <T>
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ *  
+
  */
 @Data
 public class BaseResponse<T> implements Serializable {

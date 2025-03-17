@@ -13,9 +13,9 @@
 
               <!-- 右侧内容 -->
               <el-col :span="20" class="news-content">
-                <el-text class="news-title">{{ news.title }}</el-text>
+                <el-text line-clamp="1">{{ news.title }}</el-text>
                 <br />
-                <el-text line-clamp="3" size="small">{{ news.content }}</el-text>
+                <el-text line-clamp="3" size="small">{{ htmlToText(news.content) }}</el-text>
                 <br />
                 <el-button type="primary" size="small" @click="viewDetail(news.id)">
                   查看更多
@@ -62,6 +62,12 @@ const fetchData = async (category) => {
 }
 const viewDetail = (id) => {
   route.push('/news/' + id)
+}
+
+const htmlToText = (html) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
 }
 
 

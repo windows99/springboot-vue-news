@@ -30,43 +30,40 @@
             </el-form-item>
           </el-col>
 
+          <!-- 来源 -->
           <el-col :span="12">
             <el-form-item label="来源" prop="source">
               <el-input v-model="addNewsInfo.source" placeholder="请输入新闻来源" />
             </el-form-item>
           </el-col>
+
+          <!-- 来源链接 -->
           <el-col :span="24">
             <el-form-item label="来源链接" prop="sourceurl">
               <el-input v-model="addNewsInfo.sourceurl" placeholder="请输入原文链接" />
             </el-form-item>
           </el-col>
+
+          <!-- 封面图 -->
           <el-col :span="24">
             <el-form-item label="封面图" prop="coverimage">
-              <el-upload action="#" list-type="picture-card" :auto-upload="false" :on-change="handleCoverImageChange"
+              <el-upload v-model:file-list="files" action="addNewsInfo.coverimage" list-type="picture-card"
+                :auto-upload="false" :limit="limitNum" :on-change="handleCoverImageChange"
                 :on-remove="handleCoverImageRemove">
                 <i class="el-icon-plus"></i>
               </el-upload>
             </el-form-item>
           </el-col>
 
+          <!-- 编辑器 -->
           <el-col :span="24" style="border: 1px solid #ccc">
             <Toolbar style="border-bottom: 1px solid #ccc" :editor="editorRef" :defaultConfig="toolbarConfig"
               :mode="mode" />
             <Editor style="height: 500px; overflow-y: hidden;" v-model="addNewsInfo.content"
               :defaultConfig="editorConfig" :mode="mode" @onCreated="handleCreated" />
-            <!-- <el-form-item label="正文内容" prop="content">
-              <el-input v-model="addNewsInfo.content" type="textarea" :rows="6" placeholder="请输入新闻正文内容" />
-            </el-form-item> -->
+
           </el-col>
 
-          <!-- <el-col :span="24">
-            <el-form-item label="图片集" prop="images">
-              <el-upload action="#" list-type="picture-card" :auto-upload="false" multiple
-                :on-change="handleImagesChange" :on-remove="handleImagesRemove">
-                <i class="el-icon-plus"></i>
-              </el-upload>
-            </el-form-item>
-          </el-col> -->
 
 
         </el-row>
@@ -88,7 +85,7 @@ import {
   uploadFileUsingPost,
   deleteFileUsingDelete
 } from '@/api/fileController'
-import type { UploadFile, ElMessage } from 'element-plus'
+import { UploadFile, ElMessage, UploadUserFile } from 'element-plus'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
@@ -96,6 +93,10 @@ import '@wangeditor/editor/dist/css/style.css' // 引入 css
 const imageList1 = ref([])
 const imageList2 = ref([])
 const editorRef = shallowRef()
+
+const files = ref<UploadUserFile[]>([]);
+const limitNum = ref(1)
+const mode = ref('default')
 const toolbarConfig = {
   excludeKeys: ["insertImage", "group-video", "fullScreen"],
 }
@@ -107,10 +108,11 @@ const editorConfig = {
       async customUpload(file: File, insertFn: InsertFnType) {
         // file 即选中的文件
         await uploadFileUsingPost({
-          biz: 'user_avatar'
+          biz: 'news_pic'
         }, {}, file).then(res => {
           if (res.code === 0) {
-            addNewsInfo.value.coverimage = res.data
+            // addNewsInfo.value.coverimage = res.data
+            // files.value.push({
             // 自己实现上传，并得到图片 url alt href
             insertFn(res.data, "", "")
           }
@@ -121,6 +123,7 @@ const editorConfig = {
     }
   }
 }
+
 
 //  上传图片后获取的 src
 editorConfig.MENU_CONF['insertImage'] = {
@@ -146,7 +149,10 @@ const delImages = async () => {
     })
   })
 }
-
+/**
+ * 创建编辑器
+ * @param editor 
+ */
 const handleCreated = (editor) => {
   editorRef.value = editor // 记录 editor 实例，重要！
 }
@@ -163,20 +169,26 @@ const route = useRoute()
 const formRef = ref()
 
 const isEdit = ref(false)
+
+// 分类标签信息
 const tagOptions = ref([])
 
 
 
-
-// const showAddDialog = ref(false);
+/**
+ * 新闻信息
+ */
 const addNewsInfo = ref<API.News>({
   category: '',
   images: "",
-  coverimage: ''
+  coverimage: ""
 })
 
-const getNewsId = ref<API.getNewsByIdUsingGETParams>()
+// const getNewsId = ref<API.getNewsByIdUsingGETParams>()
 
+/**
+ * 表单验证规则
+ */
 const rules = reactive({
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   content: [{ required: true, message: '请输入内容', trigger: 'blur' }],
@@ -189,39 +201,45 @@ const rules = reactive({
   ]
 })
 
-// 处理封面图上传
+/**
+ * 处理封面图上传
+ * @param file 
+ */
 const handleCoverImageChange = async (file: UploadFile) => {
 
   const res = await uploadFileUsingPost(
     {
-      biz: 'user_avatar'
+      biz: 'news_cover'
     },
     {},
     file.raw as File);
   if (res.code === 0) {
+    // 获取图片url，赋值给数组
     addNewsInfo.value.coverimage = res.data
+    ElMessage.success('上传成功');
   }
   console.log(res)
 }
 
-// 移除封面图
+/**
+ * 移除封面图
+ */
 const handleCoverImageRemove = async () => {
   const url = addNewsInfo.value.coverimage;
   const data = { fileKey: url.slice(54,) }
   const res = await deleteFileUsingDelete(data)
   if (res.code === 0) {
-    console.log("移除了")
     addNewsInfo.value.coverimage = null
+    ElMessage.success('删除成功');
   }
 }
 
 
 // 提交表单
 const submitForm = async () => {
-
+  // 删除图片
   delImages();
 
-  return
   try {
     await formRef.value.validate()
 
@@ -246,8 +264,8 @@ const initEditData = async (id: number) => {
   try {
 
     const data = await getNewsByIdUsingGet(obj)
-    console.log(data)
     addNewsInfo.value = data
+    files.value = [{ url: data.coverimage, name: data.category, uid: data.id }]
   } catch (error) {
     console.error('获取详情失败:', error)
   }

@@ -40,8 +40,10 @@ import static com.guanzhi.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
 /**
  * 用户服务实现
  *
- * @author 观止study
- * @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ * 
+
  */
 @Service
 @Slf4j

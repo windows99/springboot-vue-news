@@ -8,8 +8,10 @@ import lombok.EqualsAndHashCode;
 /**
  * 用户查询请求
  *
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ *  
+
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

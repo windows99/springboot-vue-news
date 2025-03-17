@@ -18,8 +18,10 @@ import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 /**
  * 用户服务
  *
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ *  
+
  */
 public interface UserService extends IService<User> {
 

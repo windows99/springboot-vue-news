@@ -1,6 +1,7 @@
 package com.guanzhi.springbootinit.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.alibaba.fastjson.JSONObject;
+import com.guanzhi.springbootinit.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,6 +17,10 @@ import com.obs.services.internal.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -37,35 +42,12 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
                 .eq(request.getStatus() != null, "status", request.getStatus())
                 .like(StringUtils.isNotBlank(request.getTitle()), "title", request.getTitle())
                 .like(StringUtils.isNotBlank(request.getAuthor()), "author", request.getAuthor())
-                .orderBy(SqlUtils.validSortField(request.getSortField()),
-                        request.getSortOrder().equals(CommonConstant.SORT_ORDER_ASC),
-                        StringUtils.isBlank(request.getSortField()) ? "createTime" : request.getSortField());
+                .orderByDesc(StringUtils.isBlank(request.getSortField()) ? "createTime" : request.getSortField());
         System.out.println(queryWrapper);
         return queryWrapper;
     }
 
-//    @Override
-//    public List<News> getNewsList(Map<String, Object> params) {
-//        try {
-//            NewsQueryRequest request;
-//            QueryWrapper<News> queryWrapper = new QueryWrapper<>();
-//
-//            Integer currentPage = params.get("page") == null ? 1 : (Integer) params.get("page");
-//            Integer currentPageSize = params.get("pageSize") == null ? 10 : (Integer) params.get("pageSize");
-//            Page<News> page = new Page<>(currentPage, currentPageSize);
-//
-//            Page<News> resultPage = newsMapper.selectPage(page, queryWrapper);
-//
-//            // 从结果页中获取数据列表，作为返回结果
-//            List<News> newsList = resultPage.getRecords();
-//
-//            return newsList;
-//
-//        } catch (Exception e) {
-//            log.error("Failed to fetch news list", e);
-//            throw new RuntimeException("Failed to fetch news list", e);
-//        }
-//    }
+
 
     @Override
     public News getNewsById(Long newsId){
@@ -81,9 +63,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
             log.error("Failed to increment view count for news with id: {}", newsId, e);
             throw new RuntimeException("Failed to update view count", e);
         }
-
         // 将news的view_count加1，返回最新值
-
         return news;
     }
 
@@ -99,6 +79,29 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
             throw new RuntimeException("Failed to insert news", e);
         }
     }
+
+//    @Override
+//    public boolean batchAddNews(List<News> newsList) {
+//        try {
+//            if (newsList == null || newsList.isEmpty()) {
+//                log.warn("空的新闻列表，未进行任何操作");
+//                return false;
+//            }
+//
+//            int result = newsMapper.saveBatch (newsList);
+//            if (result > 0) {
+//                log.info("成功批量添加{}条新闻", result);
+//            } else {
+//                log.error("批量添加新闻失败，结果码: {}", result);
+//                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Failed to add news in batch");
+//            }
+//        } catch (Exception e) {
+//            log.error("批量添加新闻失败，列表：{}", newsList, e);
+//            throw new RuntimeException("Failed to add news in batch", e);
+//        }
+//        return false;
+//    }
+
 
     @Override
     public void updateNews(News news) {
@@ -145,4 +148,58 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     public void shelfNews(Long newsId) {
         updateNewsStatus(newsId, 0);
     }
+
+
+    /**
+     * 获取api的新闻数据
+     * @param channel
+     * @return
+     */
+    @Override
+    public JSONObject getJisunews(String channel) {
+        String host = "https://jisunews.market.alicloudapi.com";
+        String path = "/news/get";
+        String appcode = "71f6a5c816cb4e33b91615b08b10f392"; // 考虑从配置文件中读取
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "APPCODE " + appcode);
+        headers.put("Content-Type", "application/json; charset=UTF-8");
+
+        Map<String, String> querys = new HashMap<>();
+        querys.put("channel", channel);
+        querys.put("num", "20"); // 获取10条新闻
+        querys.put("start", "0"); // 从第一个开始
+
+        String url = host + path;
+        url = buildURLWithQueryParams(url, querys);
+
+        try {
+            String response = HttpUtils.doGet(url, headers);
+            log.info("成功获取数据: {}", response);
+            // 解析JSON并处理新闻数据
+            JSONObject jsonObject = JSONObject.parseObject(response);
+
+            return  jsonObject;
+        } catch (Exception e) {
+            log.error("调用Jisu新闻API失败", e);
+            throw new RuntimeException("调用Jisu新闻API失败", e);
+        }
+    }
+
+    private String buildURLWithQueryParams(String url, Map<String, String> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return url;
+        }
+        StringBuilder sb = new StringBuilder(url);
+        sb.append("?");
+        queryParams.forEach((k, v) -> {
+            sb.append(k).append("=").append(v).append("&");
+        });
+        // 去掉最后一个 "&"
+        if (sb.length() > 1) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.toString();
+    }
+
 }

@@ -9,8 +9,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 /**
  * 主类（项目启动入口）
  *
- * @author 观止study
- * @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ * 
+
  */
 @SpringBootApplication
 @MapperScan("com.guanzhi.springbootinit.mapper")

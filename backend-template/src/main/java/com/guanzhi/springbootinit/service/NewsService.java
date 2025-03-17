@@ -1,13 +1,13 @@
 package com.guanzhi.springbootinit.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.guanzhi.springbootinit.model.entity.News;
 
-import java.util.List;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.guanzhi.springbootinit.model.dto.news.NewsQueryRequest;
+
+import java.util.List;
 
 public interface NewsService extends IService<News> {
 //   List<News> getNewsList(Map<String, Object> params);
@@ -29,4 +29,7 @@ public interface NewsService extends IService<News> {
 
     void shelfNews(Long newsId);
 
+    JSONObject getJisunews(String channel);
+
+//    boolean batchAddNews(List<News> newsList);
 }

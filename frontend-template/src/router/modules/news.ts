@@ -16,7 +16,8 @@ export default {
       component: () => import("@/views/news/list.vue"),
       meta: {
         title: "新闻列表",
-        showParent: true
+        showParent: true,
+        keepAlive: true,
       }
     },
     {
@@ -25,7 +26,8 @@ export default {
       component: () => import("@/views/news/create.vue"),
       meta: {
         title: "创建新闻",
-        hiddenTag: true
+        hiddenTag: true,
+        keepAlive: true,
       }
     },
     {

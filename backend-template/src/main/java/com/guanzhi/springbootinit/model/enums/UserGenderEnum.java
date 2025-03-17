@@ -9,8 +9,10 @@ import java.util.stream.Collectors;
 /**
  * 用户性别枚举
  *
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ *  
+
  */
 public enum UserGenderEnum {
 

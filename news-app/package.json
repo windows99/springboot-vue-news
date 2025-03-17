@@ -17,6 +17,7 @@
     "@pureadmin/descriptions": "^1.2.1",
     "@pureadmin/table": "^3.2.1",
     "@pureadmin/utils": "^2.5.0",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.8.2",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.9.6",

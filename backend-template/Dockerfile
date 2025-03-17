@@ -1,6 +1,8 @@
 # Docker 镜像构建
-# @author 观止study
-#  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+# @author sk
+
+#
+
 FROM maven:3.8.1-jdk-8-slim as builder
 
 # Copy local code to the container image.

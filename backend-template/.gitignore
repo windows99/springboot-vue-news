@@ -1,5 +1,7 @@
-### @author 观止study ###
-###  @from https://blog.csdn.net/m0_66570338/article/details/132145086 ###
+### @author sk
+ ###
+###
+ ###
 
 HELP.md
 target/
@@ -53,7 +55,8 @@ build/
 *.nar
 *.ear
 *.zip
-*.tar.@from https://blog.csdn.net/m0_66570338/article/details/132145086
+*.tar.
+
 *.rar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml

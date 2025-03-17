@@ -5,6 +5,18 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseComment_ = {
+    code?: number;
+    data?: Comment;
+    message?: string;
+  };
+
+  type BaseResponseListComment_ = {
+    code?: number;
+    data?: Comment[];
+    message?: string;
+  };
+
   type BaseResponseListNewsTag_ = {
     code?: number;
     data?: NewsTag[];
@@ -71,6 +83,11 @@ declare namespace API {
     message?: string;
   };
 
+  type batchAddNewsUsingGETParams = {
+    /** newsList */
+    newsList?: string;
+  };
+
   type Comment = {
     content?: string;
     createTime?: string;
@@ -80,7 +97,9 @@ declare namespace API {
     newsId?: number;
     parentId?: number;
     updateTime?: string;
+    userAvatar?: string;
     userId?: number;
+    username?: string;
   };
 
   type deleteCommentByIdUsingDELETEParams = {
@@ -121,6 +140,11 @@ declare namespace API {
     page?: number;
     /** pageSize */
     pageSize?: number;
+  };
+
+  type getJisunewsUsingGETParams = {
+    /** channel */
+    channel?: string;
   };
 
   type getNewsByIdUsingGETParams = {

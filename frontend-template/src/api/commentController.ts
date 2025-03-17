@@ -7,7 +7,7 @@ export async function addCommentUsingPost(
   body: API.Comment,
   options?: { [key: string]: any }
 ) {
-  return request<Record<string, any>>("/api/comment", {
+  return request<API.BaseResponseBoolean_>("/api/comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -24,7 +24,7 @@ export async function getCommentByIdUsingGet(
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<Record<string, any>>(`/api/comment/${param0}`, {
+  return request<API.BaseResponseComment_>(`/api/comment/${param0}`, {
     method: "GET",
     params: { ...queryParams },
     ...(options || {})
@@ -38,7 +38,7 @@ export async function deleteCommentByIdUsingDelete(
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<Record<string, any>>(`/api/comment/${param0}`, {
+  return request<API.BaseResponseBoolean_>(`/api/comment/${param0}`, {
     method: "DELETE",
     params: { ...queryParams },
     ...(options || {})
@@ -51,7 +51,7 @@ export async function getCommentListUsingGet(
   params: API.getCommentListUsingGETParams,
   options?: { [key: string]: any }
 ) {
-  return request<Record<string, any>>("/api/comment/list", {
+  return request<API.BaseResponseListComment_>("/api/comment/list", {
     method: "GET",
     params: {
       // page has a default value: 1

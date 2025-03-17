@@ -31,6 +31,21 @@ export async function addNewsUsingPost(
   });
 }
 
+/** batchAddNews GET /api/news/add/newlist */
+export async function batchAddNewsUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.batchAddNewsUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<any>("/api/news/add/newlist", {
+    method: "GET",
+    params: {
+      ...params
+    },
+    ...(options || {})
+  });
+}
+
 /** deleteNews DELETE /api/news/delete/${param0} */
 export async function deleteNewsUsingDelete(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -41,6 +56,21 @@ export async function deleteNewsUsingDelete(
   return request<Record<string, any>>(`/api/news/delete/${param0}`, {
     method: "DELETE",
     params: { ...queryParams },
+    ...(options || {})
+  });
+}
+
+/** getJisunews GET /api/news/jisunews/list */
+export async function getJisunewsUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getJisunewsUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<Record<string, any>>("/api/news/jisunews/list", {
+    method: "GET",
+    params: {
+      ...params
+    },
     ...(options || {})
   });
 }

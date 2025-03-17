@@ -8,12 +8,14 @@ import org.apache.commons.lang3.ObjectUtils;
 /**
  * 文件上传业务类型枚举
  *
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+ *
  */
 public enum FileUploadBizEnum {
 
     USER_AVATAR("用户头像", "user_avatar"),
+    NEWS_COVER("新闻封面", "news_cover"),
+    NEWS_PIC("新闻内容图片", "news_pic"),
     test("test", "test");
 
     private final String text;

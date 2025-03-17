@@ -224,8 +224,11 @@ const handleDelete = (id: number) => {
 
 // 发布新闻
 const handlePublish = async (row) => {
+  let data = {
+    id: row.id
+  }
   try {
-    const res = await publishNewsUsingPut(row)
+    const res = await publishNewsUsingPut(data)
     ElMessage.success('发布成功')
     fetchData()
   } catch (error) {
@@ -235,8 +238,11 @@ const handlePublish = async (row) => {
 
 // 下架新闻
 const handleUnpublish = async (row) => {
+  let data = {
+    id: row.id
+  }
   try {
-    const res = await shelfNewsUsingPut(row)
+    const res = await shelfNewsUsingPut(data)
     ElMessage.success('下架成功')
     fetchData()
   } catch (error) {

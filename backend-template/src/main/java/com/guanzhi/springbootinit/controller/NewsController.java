@@ -1,6 +1,7 @@
 package com.guanzhi.springbootinit.controller;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.guanzhi.springbootinit.common.BaseResponse;
 import com.guanzhi.springbootinit.common.ResultUtils;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,27 +25,7 @@ public class NewsController {
     @Autowired
     private NewsService newsService;
 
-//    @GetMapping("/list")
-//    public List<News> getNewsList(
-//            @RequestParam(defaultValue = "1") Integer page,
-//            @RequestParam(defaultValue = "10") Integer pageSize,
-//            @RequestParam(required = false) String title,
-//            @RequestParam(required = false) String category,
-//            @RequestParam(required = false) String author) {
-//        Map<String, Object> params = new java.util.HashMap<>();
-//        params.put("page", page);
-//        params.put("pageSize", pageSize);
-//        if (title != null && !title.isEmpty()) {
-//            params.put("title", title);
-//        }
-//        if (category != null && !category.isEmpty()) {
-//            params.put("category", category);
-//        }
-//        if (author != null && !author.isEmpty()) {
-//            params.put("author", author);
-//        }
-//        return newsService.getNewsList(params);
-//    }
+
 
     @PostMapping("/list")
     public BaseResponse<Page<News>> getNewsLists(@RequestBody NewsQueryRequest newsQueryRequest,
@@ -129,5 +111,23 @@ public class NewsController {
                     .body(Map.of("message", e.getMessage(), "status", 500));
         }
     }
+
+
+
+
+    @GetMapping("/jisunews/list")
+    public JSONObject getJisunews(String channel){
+        JSONObject res = newsService.getJisunews(channel);
+        return res;
+    }
+
+//    @PostMapping("/batch")
+//    public BaseResponse<?> batchAddNews(
+//            @RequestBody List<News> newsList) {
+//       boolean res =  newsService.batchAddNews(newsList);
+//
+//        return ResultUtils.success(res);
+//    }
+
 
 }

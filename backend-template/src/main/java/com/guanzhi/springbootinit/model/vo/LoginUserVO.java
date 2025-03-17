@@ -8,8 +8,10 @@ import java.util.Date;
 /**
  * 已登录用户视图（脱敏）
  *
- * @author 观止study
- *  @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ *  
+
  **/
 @Data
 public class LoginUserVO implements Serializable {

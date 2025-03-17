@@ -28,9 +28,9 @@
 
                       <!-- 右侧内容 -->
                       <el-col :span="20" class="news-content">
-                        <el-text>{{ news.title }}</el-text>
+                        <el-text line-clamp="1">{{ news.title }}</el-text>
                         <br />
-                        <el-text line-clamp="3" size="small">{{ news.content }}</el-text>
+                        <el-text line-clamp="3" size="small">{{ htmlToText(news.content) }}</el-text>
                         <br />
                         <el-button type="primary" size="small" @click="viewDetail(news.id)">
                           查看更多
@@ -56,14 +56,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, shallowRef } from 'vue'
 import { getNewsListsUsingPost } from "@/api/newsController"
 import { getTagListUsingGet } from "@/api/newsTagController"
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+
+import '@wangeditor/editor/dist/css/style.css' // 引入 css
 
 const route = useRouter()
+
+//  编辑器配置
+const editorRef = shallowRef()
+const toolbarConfig = {}
+const editorConfig = { placeholder: '请输入内容...' }
+const mode = "default"
+const valueHtml = ref('<p>hello</p>')
+
 
 const newsList = ref([])
 
@@ -97,6 +108,11 @@ const viewDetail = (id) => {
 
 }
 
+const htmlToText = (html) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+}
 
 const handleTabClick = (tab, event) => {
   fetchData(tab.props.name)
@@ -117,6 +133,8 @@ const fetchData = async (category) => {
     const res = await getNewsListsUsingPost(params)
     if (res.code == 0) {
       newsList.value = res.data.records
+
+
     }
   } finally {
     console.log("获取新闻列表成功")
@@ -134,7 +152,6 @@ const fetchTabsData = async () => {
     const res = await getTagListUsingGet(params)
     if (res.code == 0) {
       tabs.value.push(...res.data)
-      // tabs.value = res.data
     }
   } finally {
     console.log("err")

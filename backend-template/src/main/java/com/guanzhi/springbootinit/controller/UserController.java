@@ -30,8 +30,10 @@ import static com.guanzhi.springbootinit.constant.UserConstant.SALT;
 /**
  * 用户接口
  *
- * @author 观止study
- * @from https://blog.csdn.net/m0_66570338/article/details/132145086
+ * @author sk
+
+ * 
+
  */
 @RestController
 @RequestMapping("/user")
