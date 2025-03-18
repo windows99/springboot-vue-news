@@ -13,13 +13,11 @@
 
               <!-- 右侧内容 -->
               <el-col :span="20" class="news-content">
-                <el-text line-clamp="1">{{ news.title }}</el-text>
-                <br />
+                <el-text  @click="viewDetail(news.id)" class="hover-title" line-clamp="1" size="large">{{ news.title }}</el-text>
+                        <br />
                 <el-text line-clamp="3" size="small">{{ htmlToText(news.content) }}</el-text>
                 <br />
-                <el-button type="primary" size="small" @click="viewDetail(news.id)">
-                  查看更多
-                </el-button>
+                
               </el-col>
             </el-row>
           </el-card>
@@ -101,5 +99,10 @@ onMounted(() => {
 .news-title {
   font-size: 22px;
   font-weight: 500;
+}
+
+.hover-title:hover {
+  color: #409eff;
+  cursor: pointer;
 }
 </style>

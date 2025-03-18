@@ -23,25 +23,24 @@
                     <el-row>
                       <!-- 左侧图片 -->
                       <el-col :span="4">
-                        <el-image :src="news.coverimage" fit="cover" :preview-src-list="[news.coverimage]" />
+                        <el-image :src="news.coverimage" fit="cover" :preview-src-list="[news.coverimage]"
+                          @load="(e) => handleImageLoad(e, news)" ref="newsImage" />
                       </el-col>
 
                       <!-- 右侧内容 -->
                       <el-col :span="20" class="news-content">
-                        <el-text line-clamp="1">{{ news.title }}</el-text>
+                        <el-text @click="viewDetail(news.id)" class="hover-title" line-clamp="1" size="large">{{
+                          news.title }}</el-text>
                         <br />
-                        <el-text line-clamp="3" size="small">{{ htmlToText(news.content) }}</el-text>
+                        <el-text :line-clamp="news.lineClamp || 3" size="small" :style="{ height: news.textHeight }">
+                          {{ htmlToText(news.content) }}
+                        </el-text>
                         <br />
-                        <el-button type="primary" size="small" @click="viewDetail(news.id)">
-                          查看更多
-                        </el-button>
                       </el-col>
                     </el-row>
                   </el-card>
                 </el-col>
               </el-row>
-
-
 
             </el-tab-pane>
           </el-tabs>
@@ -56,27 +55,49 @@
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef } from 'vue'
+import { ref, onMounted, shallowRef, onBeforeUnmount, nextTick } from 'vue'
 import { getNewsListsUsingPost } from "@/api/newsController"
 import { getTagListUsingGet } from "@/api/newsTagController"
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-
-import '@wangeditor/editor/dist/css/style.css' // 引入 css
 
 const route = useRouter()
+const newsList = ref(JSON.parse(sessionStorage.getItem('cachedNewsList') || '[]'))
 
-//  编辑器配置
-const editorRef = shallowRef()
-const toolbarConfig = {}
-const editorConfig = { placeholder: '请输入内容...' }
-const mode = "default"
-const valueHtml = ref('<p>hello</p>')
+// 处理图片加载
+const handleImageLoad = (e, news) => {
+  setTimeout(() => {
+    const img = e.target?.querySelector('.el-image__inner') || e.target?.querySelector('img') || e.target
+ 
+    if (!img) return
 
+    // 确保图片完全加载
+    if (!img.complete || img.naturalHeight === 0) {
+      img.onload = () => {
+        const imgHeight = img.clientHeight
+        updateTextHeight(news, imgHeight)
+      }
+      return
+    }
 
-const newsList = ref([])
+    const imgHeight = img.clientHeight
+    updateTextHeight(news, imgHeight)
+  }, 100)
+}
+
+const updateTextHeight = (news, imgHeight) => {
+  const lineHeight = 20 // 每行文字高度
+  const padding = 16 // 文字区域padding
+  const availableHeight = imgHeight - padding
+
+  // 计算最大行数，限制在1-5行之间
+  const maxLines = Math.floor(availableHeight / lineHeight)
+  news.lineClamp = Math.max(1, Math.min(maxLines, 5))
+
+  // 设置文字区域高度与图片高度一致
+  news.textHeight = `${imgHeight}px`
+}
 
 // 轮播图数据
 const carouselItems = ref([
@@ -104,8 +125,8 @@ const tabs = ref([
 // 标签页
 const activeTab = ref(1)
 const viewDetail = (id) => {
+  sessionStorage.setItem('homeScrollPosition', window.scrollY)
   route.push('/news/' + id)
-
 }
 
 const htmlToText = (html) => {
@@ -118,11 +139,9 @@ const handleTabClick = (tab, event) => {
   fetchData(tab.props.name)
 }
 
-
 // 获取新闻列表
 const fetchData = async (category) => {
   try {
-    // 合并分页参数和查询条件
     let params = {
       current: 1,
       pageSize: 10,
@@ -133,8 +152,6 @@ const fetchData = async (category) => {
     const res = await getNewsListsUsingPost(params)
     if (res.code == 0) {
       newsList.value = res.data.records
-
-
     }
   } finally {
     console.log("获取新闻列表成功")
@@ -144,7 +161,6 @@ const fetchData = async (category) => {
 // 获取新闻标签列表
 const fetchTabsData = async () => {
   try {
-    // 合并分页参数和查询条件
     let params = {
       page: 1,
       pageSize: 100
@@ -158,14 +174,22 @@ const fetchTabsData = async () => {
   }
 }
 
-
-
-
 onMounted(() => {
   fetchTabsData()
-  fetchData(1)
+  if (newsList.value.length === 0) {
+    fetchData(1)
+  }
+
+  const savedPosition = sessionStorage.getItem('homeScrollPosition')
+  if (savedPosition) {
+    window.scrollTo(0, Number(savedPosition))
+    sessionStorage.removeItem('homeScrollPosition')
+  }
 })
 
+onBeforeUnmount(() => {
+  sessionStorage.setItem('cachedNewsList', JSON.stringify(newsList.value))
+})
 </script>
 
 <style scoped>
@@ -183,13 +207,9 @@ onMounted(() => {
   border-radius: 18px;
 }
 
-
-
 .news-content {
   padding-left: 20px;
 }
-
-
 
 .news-description {
   color: #666;
@@ -208,5 +228,10 @@ onMounted(() => {
 
 .user-avatar {
   float: right;
+}
+
+.hover-title:hover {
+  color: #409eff;
+  cursor: pointer;
 }
 </style>

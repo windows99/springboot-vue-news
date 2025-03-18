@@ -9,9 +9,11 @@ export async function getNewsByIdUsingGet(
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params;
-  return request<API.News>(`/api/news/${param0}`, {
+  return request<API.BaseResponseNews_>(`/api/news/${param0}`, {
     method: "GET",
-    params: { ...queryParams },
+    params: {
+      ...queryParams
+    },
     ...(options || {})
   });
 }
@@ -41,6 +43,21 @@ export async function deleteNewsUsingDelete(
   return request<Record<string, any>>(`/api/news/delete/${param0}`, {
     method: "DELETE",
     params: { ...queryParams },
+    ...(options || {})
+  });
+}
+
+/** getJisunews GET /api/news/jisunews/list */
+export async function getJisunewsUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getJisunewsUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<Record<string, any>>("/api/news/jisunews/list", {
+    method: "GET",
+    params: {
+      ...params
+    },
     ...(options || {})
   });
 }

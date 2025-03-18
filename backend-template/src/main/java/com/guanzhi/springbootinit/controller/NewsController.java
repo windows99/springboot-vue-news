@@ -8,6 +8,7 @@ import com.guanzhi.springbootinit.common.ResultUtils;
 import com.guanzhi.springbootinit.model.dto.news.NewsQueryRequest;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.service.NewsService;
+import com.guanzhi.springbootinit.service.UserNewsViewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class NewsController {
 
     @Autowired
     private NewsService newsService;
+    
+    @Autowired
+    private UserNewsViewService userNewsViewService;
 
 
 
@@ -40,8 +44,15 @@ public class NewsController {
 
 
     @GetMapping("/{id}")
-    public News getNewsById(@PathVariable Long id) {
-        return newsService.getNewsById(id);
+    public BaseResponse<News> getNewsById(@PathVariable Long id, @RequestParam(required = false) Long userId) {
+        News news = newsService.getNewsById(id);
+        String newsTitle = news.getTitle();
+        // 记录浏览
+        if (userId  != null) {
+            userNewsViewService.recordView(userId, id, newsTitle);
+        }
+        return ResultUtils.success(news);
+
     }
 
     @PostMapping("/add")

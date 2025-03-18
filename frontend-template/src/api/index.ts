@@ -8,11 +8,13 @@ import * as fileController from "./fileController";
 import * as newsTagController from "./newsTagController";
 import * as newsController from "./newsController";
 import * as userController from "./userController";
+import * as userNewsViewController from "./userNewsViewController";
 export default {
   commentController,
   commonController,
   fileController,
   newsTagController,
   newsController,
-  userController
+  userController,
+  userNewsViewController
 };

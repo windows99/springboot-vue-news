@@ -34,6 +34,11 @@ public interface UserConstant {
     String ADMIN_ROLE = "admin";
 
     /**
+     * 编辑角色
+     */
+    String EDITOR_ROLE = "editor";
+
+    /**
      * 被封号
      */
     String BAN_ROLE = "ban";

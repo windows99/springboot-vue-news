@@ -6,12 +6,17 @@ import NewsDetailView from '../views/NewsDetailView.vue'
 // import ProfileView from '../views/ProfileView.vue'
 import ProfileView from '../views/my/myInfo.vue'
 import LoginView from '../views/login/index.vue'
+import ViewHistory from '../views/my/ViewHistory.vue'
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView
+    component: HomeView,
+    meta: {
+      keepAlive: true
+    }
+
   },
   {
     path: '/recommend',
@@ -27,6 +32,7 @@ const routes = [
     path: '/news/:id',
     name: 'news-detail',
     component: NewsDetailView
+
   },
   {
     path: '/profile',
@@ -37,6 +43,11 @@ const routes = [
     path: '/login',
     name: 'login',
     component: LoginView
+  },
+  {
+    path: '/view-history',
+    name: 'view-history',
+    component: ViewHistory
   },
 ]
 

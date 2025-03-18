@@ -2,8 +2,8 @@
   <el-header class="header-nav">
     <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" :ellipsis="false"
       @select="handleSelect" active-text-color="#409EFF">
-      <el-menu-item index="0">
-        <img style="width: 60px" src="../assets/vue.svg" alt="Element logo" />
+      <el-menu-item>
+        <img style="width: 60px" src="/public/logo.svg" alt="Element logo" />
       </el-menu-item>
 
       <el-menu-item index="/">首页</el-menu-item>
@@ -36,9 +36,6 @@ import { useUserStoreHook } from '../stores/modules/user'
 
 
 const useUserStore = useUserStoreHook()
-console.log(useUserStore)
-console.log(useUserStore.user)
-console.log(useUserStore.user.id)
 const loginText = ref(useUserStore.user.id ? false : true)
 
 const route = useRouter()
@@ -51,7 +48,7 @@ function goToProfile() {
   route.push('/profile')
 }
 function goToHistory() {
-  route.push('/history')
+  route.push('/view-history')
 }
 
 
@@ -69,8 +66,11 @@ function logout() {
   width: 100%;
   z-index: 1000;
   background: #fff;
-  padding: auto;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+.el-menu-demo{
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .flex-grow {

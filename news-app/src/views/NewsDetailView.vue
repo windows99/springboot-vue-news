@@ -12,7 +12,6 @@
               </template>
             </el-page-header>
 
-
             <!-- 元数据 -->
             <el-space>
               <el-text type="info">作者：{{ news.author }}</el-text>
@@ -23,9 +22,6 @@
               <el-text type="info">浏览量：{{ news.viewcount }}</el-text>
             </el-space>
 
-            <!-- <el-space style="justify-content: center;">
-                <el-image :src="news.coverimage" />
-              </el-space> -->
             <!-- 新闻内容 -->
             <el-card shadow="never">
               <div class="content" v-html="news.content"></div>
@@ -60,7 +56,6 @@
             <el-space direction="vertical" :size="16" fill>
               <el-card v-for="comment in comments" :key="comment.id" shadow="never" class="!border-1">
                 <el-space alignment="flex-start" :size="12" fill>
-
                   <div>
                     <el-space :size="8">
                       <el-avatar :src="comment.userAvatar" />
@@ -68,9 +63,6 @@
                       <el-text type="info" size="small">{{ comment.createTime }}</el-text>
                     </el-space>
                     <div class="mt-2">{{ comment.content }}</div>
-                    <!-- <el-button type="primary" link size="small" @click="replyComment(comment.id)">
-                      回复
-                    </el-button> -->
                   </div>
                 </el-space>
               </el-card>
@@ -79,15 +71,12 @@
         </el-col>
       </el-row>
     </el-main>
-
-
-
   </el-container>
   <FooterBar />
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 import { useRoute } from 'vue-router'
@@ -95,26 +84,34 @@ import { View, Star, Share, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getNewsByIdUsingGet, updateNewsUsingPut } from "@/api/newsController"
 import { useUserStoreHook } from '../stores/modules/user'
-import { getCommentListUsingGet, addCommentUsingPost, deleteCommentByIdUsingDelete } from "@/api/commentController"
-
+import { getCommentListUsingGet, addCommentUsingPost } from "@/api/commentController"
 
 const useUserStore = useUserStoreHook()
-
 const route = useRoute()
 const news = ref({})
 const newComment = ref('')
 const comments = ref([])
 
+
+
 onMounted(async () => {
   await fetchNews()
   fetchComments()
+  window.scrollTo({
+    // top: document.documentElement.offsetHeight, //回到底部
+    top: 0, //回到顶部
+    left: 0,
+    behavior: "auto", //smooth 平滑；auto:瞬间
+  });
 })
+
+
 
 const fetchNews = async () => {
   const newsId = route.params.id
-  const obj = { "id": newsId }
+  const obj = { "id": newsId, userId: useUserStore.user.id ? useUserStore.user.id : null }
   const data = await getNewsByIdUsingGet(obj)
-  news.value = data
+  news.value = data.data
 }
 
 const fetchComments = async () => {
@@ -138,6 +135,8 @@ const handleLike = async () => {
 }
 
 const goBack = () => {
+  // 保存当前滚动位置
+  sessionStorage.setItem('detailScrollPosition', window.scrollY)
   window.history.back()
 }
 
@@ -150,7 +149,6 @@ const handleWarningFilled = () => {
 }
 
 const submitComment = async () => {
-
   if (!newComment.value.trim()) {
     ElMessage.error('评论内容不能为空')
     return
@@ -166,13 +164,6 @@ const submitComment = async () => {
     fetchComments()
   } else {
     ElMessage.error('请先登录')
-  }
-}
-
-const replyComment = (commentId) => {
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    newComment.value = `@${comment.username} `
   }
 }
 </script>

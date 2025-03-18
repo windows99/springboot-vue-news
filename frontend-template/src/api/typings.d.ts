@@ -23,6 +23,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListUserNewsView_ = {
+    code?: number;
+    data?: UserNewsView[];
+    message?: string;
+  };
+
   type BaseResponseLoginUserVO_ = {
     code?: number;
     data?: LoginUserVO;
@@ -32,6 +38,12 @@ declare namespace API {
   type BaseResponseLong_ = {
     code?: number;
     data?: number;
+    message?: string;
+  };
+
+  type BaseResponseNews_ = {
+    code?: number;
+    data?: News;
     message?: string;
   };
 
@@ -83,11 +95,6 @@ declare namespace API {
     message?: string;
   };
 
-  type batchAddNewsUsingGETParams = {
-    /** newsList */
-    newsList?: string;
-  };
-
   type Comment = {
     content?: string;
     createTime?: string;
@@ -100,6 +107,11 @@ declare namespace API {
     userAvatar?: string;
     userId?: number;
     username?: string;
+  };
+
+  type deleteAllViewsByUserIdUsingPOSTParams = {
+    /** userId */
+    userId: number;
   };
 
   type deleteCommentByIdUsingDELETEParams = {
@@ -126,6 +138,13 @@ declare namespace API {
     id: number;
   };
 
+  type deleteViewByIdUsingPOSTParams = {
+    /** userId */
+    userId?: number;
+    /** viewId */
+    viewId: number;
+  };
+
   type getCommentByIdUsingGETParams = {
     /** id */
     id: number;
@@ -150,6 +169,8 @@ declare namespace API {
   type getNewsByIdUsingGETParams = {
     /** id */
     id: number;
+    /** userId */
+    userId?: number;
   };
 
   type getTagListUsingGETParams = {
@@ -172,6 +193,13 @@ declare namespace API {
   type getUserVOByIdUsingGETParams = {
     /** id */
     id?: number;
+  };
+
+  type getViewHistoryUsingGETParams = {
+    /** params */
+    params: Record<string, any>;
+    /** userId */
+    userId: number;
   };
 
   type LoginUserVO = {
@@ -274,6 +302,15 @@ declare namespace API {
     id: number;
   };
 
+  type recordViewUsingPOSTParams = {
+    /** newsId */
+    newsId: number;
+    /** newsTitle */
+    newsTitle: string;
+    /** userId */
+    userId: number;
+  };
+
   type shelfNewsUsingPUTParams = {
     /** id */
     id: number;
@@ -327,6 +364,14 @@ declare namespace API {
   type UserLoginRequest = {
     email?: string;
     userPassword?: string;
+  };
+
+  type UserNewsView = {
+    id?: number;
+    newsId?: number;
+    newsTitle?: string;
+    userId?: number;
+    viewTime?: string;
   };
 
   type UserPasswordResetRequest = {
