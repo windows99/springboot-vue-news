@@ -18,7 +18,7 @@
             <el-tab-pane v-for="tab in tabs" :key="tab.id" :label="tab.tagname" :name="tab.id">
 
               <el-row :gutter="20">
-                <el-col v-for="news in newsList" :key="news.id" :span="24" class="news-item">
+                <el-col style="margin-bottom: 10px;" v-for="news in newsList" :key="news.id" :span="24" class="news-item">
                   <el-card shadow="hover" class="card-border">
                     <el-row>
                       <!-- 左侧图片 -->
@@ -42,6 +42,17 @@
                 </el-col>
               </el-row>
 
+              <!-- 加载状态 -->
+              <el-row justify="center" style="margin: 20px 0;">
+                <el-col :span="24" style="text-align: center;">
+                  <el-text v-if="loading" type="info">加载中...</el-text>
+                  <el-text v-if="noMore" type="info">没有更多数据了</el-text>
+                  <el-button v-if="!noMore && !loading" type="primary" @click="loadMore" style="margin-top: 20px;">
+                    加载更多
+                  </el-button>
+                </el-col>
+              </el-row>
+
             </el-tab-pane>
           </el-tabs>
         </el-col>
@@ -55,21 +66,36 @@
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, shallowRef, onBeforeUnmount, nextTick, computed } from 'vue'
 import { getNewsListsUsingPost } from "@/api/newsController"
 import { getTagListUsingGet } from "@/api/newsTagController"
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 
+// 使用Vue Router
 const route = useRouter()
+// 新闻列表数据，从sessionStorage中读取缓存
 const newsList = ref(JSON.parse(sessionStorage.getItem('cachedNewsList') || '[]'))
 
+// 当前页码
+const currentPage = ref(1)
+// 总页数
+const totalPages = ref(0)
+// 加载状态
+const loading = ref(false)
+// 计算属性：判断是否还有更多数据
+const noMore = computed(() => {
+  if (newsList.value.length === 0) return false
+  return currentPage.value >= totalPages.value
+})
+
 // 处理图片加载
+// 处理图片加载完成事件
 const handleImageLoad = (e, news) => {
   setTimeout(() => {
     const img = e.target?.querySelector('.el-image__inner') || e.target?.querySelector('img') || e.target
- 
+
     if (!img) return
 
     // 确保图片完全加载
@@ -86,6 +112,7 @@ const handleImageLoad = (e, news) => {
   }, 100)
 }
 
+// 根据图片高度更新文本区域高度
 const updateTextHeight = (news, imgHeight) => {
   const lineHeight = 20 // 每行文字高度
   const padding = 16 // 文字区域padding
@@ -99,7 +126,7 @@ const updateTextHeight = (news, imgHeight) => {
   news.textHeight = `${imgHeight}px`
 }
 
-// 轮播图数据
+// 轮播图数据，包含图片URL和标题
 const carouselItems = ref([
   {
     id: 1,
@@ -118,47 +145,90 @@ const carouselItems = ref([
   }
 ])
 
+// 新闻分类标签页数据
 const tabs = ref([
   { id: 1, name: 'all', tagname: '全部' },
 ])
 
 // 标签页
+// 当前激活的标签页
 const activeTab = ref(1)
+// 查看新闻详情
 const viewDetail = (id) => {
   sessionStorage.setItem('homeScrollPosition', window.scrollY)
   route.push('/news/' + id)
 }
 
+// 将HTML内容转换为纯文本
 const htmlToText = (html) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   return doc.body.textContent || '';
 }
 
+// 处理标签页点击事件
 const handleTabClick = (tab, event) => {
+  currentPage.value = 1
   fetchData(tab.props.name)
 }
 
-// 获取新闻列表
-const fetchData = async (category) => {
+// 获取新闻列表数据
+const fetchData = async (category, isLoadMore = false) => {
+  if (loading.value) return
+  loading.value = true
+  console.log("查询" + currentPage.value + "页码")
+  console.log("总共" + totalPages.value + "页码")
   try {
     let params = {
-      current: 1,
       pageSize: 10,
-      status: 0,
-      category: category === 1 ? null : category
+      status: 1,
+      category: category === 1 ? null : category,
+      current: currentPage.value,
     }
 
     const res = await getNewsListsUsingPost(params)
     if (res.code == 0) {
-      newsList.value = res.data.records
+      if (isLoadMore) {
+        newsList.value.push(...res.data.records)
+      } else {
+        newsList.value = res.data.records
+      }
+      totalPages.value = res.data.pages
+      currentPage.value = +res.data.current
     }
   } finally {
-    console.log("获取新闻列表成功")
+    loading.value = false
   }
 }
 
-// 获取新闻标签列表
+// 加载更多新闻
+const loadMore = () => {
+  currentPage.value += 1
+  fetchData(activeTab.value, true)
+}
+
+// 处理页面滚动事件，实现无限滚动加载
+const handleScroll = () => {
+  const bottomOfWindow =
+    document.documentElement.scrollTop + window.innerHeight >=
+    document.documentElement.offsetHeight - 100
+
+  if (bottomOfWindow && !loading.value && !noMore.value) {
+    loadMore()
+  }
+}
+
+// 组件挂载时初始化
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+// 组件卸载前保存数据
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+// 获取新闻分类标签数据
 const fetchTabsData = async () => {
   try {
     let params = {
@@ -177,7 +247,7 @@ const fetchTabsData = async () => {
 onMounted(() => {
   fetchTabsData()
   if (newsList.value.length === 0) {
-    fetchData(1)
+    fetchData(1, true)
   }
 
   const savedPosition = sessionStorage.getItem('homeScrollPosition')

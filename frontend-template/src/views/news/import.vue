@@ -44,7 +44,7 @@
           <el-table-column prop="category" label="标签" />
           <el-table-column prop="sourceurl" label="来源链接" show-overflow-tooltip />
           <el-table-column prop="author" label="作者" />
-          <el-table-column prop="createtime" label="创建时间" />
+          <el-table-column prop="time" label="创建时间" />
         </el-table>
 
         <el-alert v-if="newsList.length === 0 && !loading.fetch" type="info" title="请先选择标签并获取新闻" show-icon
@@ -97,7 +97,7 @@ const fetchNews = async () => {
       source: item.src,  // 来源
       sourceurl: item.weburl,   // 来源链接
       author: item.src, // 作者
-      createtime: item.time,  // 创建时间
+      time: item.time,  // 创建时间
       category: selectedTag.value.id,     // 标签
       commentcount: 0,
       id: 0,
