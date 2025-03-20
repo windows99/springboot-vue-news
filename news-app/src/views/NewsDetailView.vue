@@ -125,7 +125,7 @@ onMounted(async () => {
  * 获取新闻详情
  */
 const fetchNews = async (): Promise<void> => {
-  const newsId = Number(route.params.id)
+  const newsId = route.params.id
   const obj = { 
     id: newsId,
     userId: useUserStore.user.id ? useUserStore.user.id : null 

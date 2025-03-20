@@ -1,6 +1,0 @@
-{
-  "usingComponents": {
-    "van-button": "@vant/weapp/button/index",
-    "custrom-tab-bar": "../../components/custom-tab-bar/index"
-  }
-}

@@ -1,5 +1,0 @@
-<view class="main">
-  <van-button type="primary" plain bind:tap="handler">测试</van-button>
-</view>
-
-<custrom-tab-bar id="footer-nav-bar"/>

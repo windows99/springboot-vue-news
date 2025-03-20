@@ -1,3 +1,0 @@
-<view class="main">
-  <van-button type="primary" plain bind:tap="login">登录</van-button>
-</view>
