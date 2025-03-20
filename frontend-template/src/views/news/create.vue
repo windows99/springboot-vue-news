@@ -264,8 +264,8 @@ const initEditData = async (id: number) => {
   try {
 
     const data = await getNewsByIdUsingGet(obj)
-    addNewsInfo.value = data
-    files.value = [{ url: data.coverimage, name: data.category, uid: data.id }]
+    addNewsInfo.value = data.data
+    files.value = [{ url: data.data.coverimage, name: data.data.category, uid: data.data.id }]
   } catch (error) {
     console.error('获取详情失败:', error)
   }

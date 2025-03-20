@@ -1,6 +1,7 @@
 package com.guanzhi.springbootinit.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.guanzhi.springbootinit.service.SensitiveWordService;
 import com.guanzhi.springbootinit.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -28,6 +30,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Autowired
     private NewsMapper newsMapper;
+
+    @Autowired
+    private SensitiveWordService sensitiveWordService;
 
     @Override
     public QueryWrapper<News> getQueryWrapper(NewsQueryRequest request) {
@@ -72,12 +77,27 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     public boolean addNews(News news) {
 
         try {
-            int result = newsMapper.insert(news);
+            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
+                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
+            }
+            int result =  newsMapper.insert(news);
             return result > 0;
+        } catch (BusinessException be) {
+//            log.info("发布新闻失败，原因：{}", be);
+            throw be;
         } catch (Exception e) {
-            log.error("Failed to insert news: ", e);
-            throw new RuntimeException("Failed to insert news", e);
+            log.error("发布新闻失败", e);
+            throw new RuntimeException("Failed to publish news", e);
         }
+
+
+//        try {
+//            int result = newsMapper.insert(news);
+//            return result > 0;
+//        } catch (Exception e) {
+//            log.error("Failed to insert news: ", e);
+//            throw new RuntimeException("Failed to insert news", e);
+//        }
     }
 
 //    @Override
@@ -202,4 +222,17 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         return sb.toString();
     }
 
+    @Override
+    public List<News> getTop3NewsByViewCount() {
+        try {
+            QueryWrapper<News> queryWrapper = new QueryWrapper<>();
+            queryWrapper.orderByDesc("viewCount");
+            queryWrapper.orderByDesc( "createTime");
+            List<News> newsList = newsMapper.selectList(queryWrapper);
+            return newsList.stream().limit(3).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Failed to get top 3 news", e);
+            throw new RuntimeException("Failed to get top news", e);
+        }
+    }
 }

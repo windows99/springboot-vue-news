@@ -17,6 +17,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListNews_ = {
+    code?: number;
+    data?: News[];
+    message?: string;
+  };
+
   type BaseResponseListNewsTag_ = {
     code?: number;
     data?: NewsTag[];

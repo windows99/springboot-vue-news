@@ -44,15 +44,24 @@
   <FooterBar />
 </template>
 
-<script setup>
-
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import type { UploadFile } from 'element-plus'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 // import { useUserStore } from '@/stores'
 
-// const userStore = useUserStore()
-const user = ref({
+// 定义用户信息类型
+interface UserInfo {
+  username: string
+  email: string
+  avatar: string
+  profile: string
+  gender: string
+}
+
+// 用户信息ref，使用UserInfo类型
+const user = ref<UserInfo>({
   username: '',
   email: '',
   avatar: '',
@@ -60,22 +69,30 @@ const user = ref({
   gender: ''
 })
 
+// 组件挂载时获取用户信息
 onMounted(async () => {
   // await userStore.getUserProfile()
   // user.value = { ...userStore.userProfile }
 })
 
-const handleAvatarChange = (event) => {
-  const file = event.target.files[0]
+/**
+ * 处理头像上传
+ * @param event - 文件上传事件
+ */
+const handleAvatarChange = (uploadFile: UploadFile) => {
+  const file = uploadFile.raw
   if (file) {
     const reader = new FileReader()
     reader.onload = (e) => {
-      user.value.avatar = e.target.result
+      user.value.avatar = e.target?.result as string
     }
     reader.readAsDataURL(file)
   }
 }
 
+/**
+ * 更新用户信息
+ */
 const updateProfile = async () => {
   // await userStore.updateUserProfile(user.value)
 }

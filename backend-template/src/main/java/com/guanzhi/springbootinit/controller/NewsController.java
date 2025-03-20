@@ -2,9 +2,11 @@ package com.guanzhi.springbootinit.controller;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.guanzhi.springbootinit.common.BaseResponse;
 import com.guanzhi.springbootinit.common.ResultUtils;
+import com.guanzhi.springbootinit.exception.BusinessException;
 import com.guanzhi.springbootinit.model.dto.news.NewsQueryRequest;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.service.NewsService;
@@ -56,21 +58,23 @@ public class NewsController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addNews(@RequestBody News news) {
-        try {
-            boolean result = newsService.addNews(news);
-            if (result) {
-                return ResponseEntity.ok()
-                        .body(Map.of("message", "News added successfully!", "status", 200));
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "Failed to add news.", "status", 400));
-            }
-        } catch (Exception e) {
-            log.error("Error adding news: ", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", e.getMessage(), "status", 500));
-        }
+    public BaseResponse<String> addNews(@RequestBody News news) {
+        newsService.addNews(news);
+        return ResultUtils.success("新闻发布成功");
+//        try {
+//            boolean result = newsService.addNews(news);
+//            if (result) {
+//                return ResponseEntity.ok()
+//                        .body(Map.of("message", "News added successfully!", "status", 200));
+//            } else {
+//                return ResponseEntity.badRequest()
+//                        .body(Map.of("message", "Failed to add news.", "status", 400));
+//            }
+//        } catch (Exception e) {
+//            log.error("Error adding news: ", e);
+//            return ResponseEntity.internalServerError()
+//                    .body(Map.of("message", e.getMessage(), "status", 500));
+//        }
     }
 
     @PutMapping("/update/{id}")
@@ -139,6 +143,13 @@ public class NewsController {
 //
 //        return ResultUtils.success(res);
 //    }
+
+    @GetMapping("/top3")
+    public BaseResponse<List<News>> getTop3NewsByViewCount() {
+        List<News> top3News = newsService.getTop3NewsByViewCount();
+        return ResultUtils.success(top3News);
+    }
+
 
 
 }

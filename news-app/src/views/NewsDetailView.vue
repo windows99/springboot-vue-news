@@ -8,7 +8,7 @@
             <!-- 标题区 -->
             <el-page-header @back="goBack">
               <template #content>
-                <h1 style="margin: 0;">{{ news.title }}</h1>
+                <h2 style="margin: 0;">{{ news.title }}</h2>
               </template>
             </el-page-header>
 
@@ -75,8 +75,8 @@
   <FooterBar />
 </template>
 
-<script setup>
-import { ref, onMounted, } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 import { useRoute } from 'vue-router'
@@ -85,44 +85,72 @@ import { ElMessage } from 'element-plus'
 import { getNewsByIdUsingGet, updateNewsUsingPut } from "@/api/newsController"
 import { useUserStoreHook } from '../stores/modules/user'
 import { getCommentListUsingGet, addCommentUsingPost } from "@/api/commentController"
+import type { News, Comment } from '@/api/typings.d'
 
+// 使用用户store
 const useUserStore = useUserStoreHook()
 const route = useRoute()
-const news = ref({})
-const newComment = ref('')
-const comments = ref([])
+
+// 新闻详情数据
+const news = ref<News>({
+  id: 0,
+  title: '',
+  content: '',
+  author: '',
+  createtime: '',
+  viewcount: 0
+})
+// 新评论内容
+const newComment = ref<string>('')
+// 评论列表
+const comments = ref<Comment[]>([])
 
 
 
+// 组件挂载时初始化
 onMounted(async () => {
   await fetchNews()
   fetchComments()
+  // 页面滚动到顶部
   window.scrollTo({
-    // top: document.documentElement.offsetHeight, //回到底部
-    top: 0, //回到顶部
+    top: 0,
     left: 0,
-    behavior: "auto", //smooth 平滑；auto:瞬间
+    behavior: "auto"
   });
 })
 
 
 
-const fetchNews = async () => {
-  const newsId = route.params.id
-  const obj = { "id": newsId, userId: useUserStore.user.id ? useUserStore.user.id : null }
+/**
+ * 获取新闻详情
+ */
+const fetchNews = async (): Promise<void> => {
+  const newsId = Number(route.params.id)
+  const obj = { 
+    id: newsId,
+    userId: useUserStore.user.id ? useUserStore.user.id : null 
+  }
   const data = await getNewsByIdUsingGet(obj)
-  news.value = data.data
+  if (data.code === 0) {
+    news.value = data.data
+  }
 }
 
-const fetchComments = async () => {
+/**
+ * 获取评论列表
+ */
+const fetchComments = async (): Promise<void> => {
   const obj = { newsId: news.value.id }
   const res = await getCommentListUsingGet(obj)
-  if (res.code == 0) {
+  if (res.code === 0) {
     comments.value = res.data
   }
 }
 
-const handleLike = async () => {
+/**
+ * 处理点赞操作
+ */
+const handleLike = async (): Promise<void> => {
   if (useUserStore.user.id) {
     news.value.likecount = (news.value.likecount || 0) + 1
     const res = await updateNewsUsingPut({ id: news.value.id }, news.value)
@@ -134,21 +162,33 @@ const handleLike = async () => {
   }
 }
 
-const goBack = () => {
+/**
+ * 返回上一页
+ */
+const goBack = (): void => {
   // 保存当前滚动位置
-  sessionStorage.setItem('detailScrollPosition', window.scrollY)
+  sessionStorage.setItem('detailScrollPosition', window.scrollY.toString())
   window.history.back()
 }
 
-const handleShare = () => {
+/**
+ * 处理分享操作
+ */
+const handleShare = (): void => {
   ElMessage.success('分享功能开发中')
 }
 
-const handleWarningFilled = () => {
+/**
+ * 处理反馈操作
+ */
+const handleWarningFilled = (): void => {
   ElMessage.success('反馈功能开发中')
 }
 
-const submitComment = async () => {
+/**
+ * 提交评论
+ */
+const submitComment = async (): Promise<void> => {
   if (!newComment.value.trim()) {
     ElMessage.error('评论内容不能为空')
     return

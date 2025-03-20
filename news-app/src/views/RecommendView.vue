@@ -42,7 +42,7 @@
   <FooterBar />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
 import { getNewsListsUsingPost } from "@/api/newsController"
 import { useRouter } from 'vue-router'
@@ -51,10 +51,10 @@ import FooterBar from '../components/FooterBar.vue'
 
 const route = useRouter()
 
-const newsList = ref([])
-const currentPage = ref(1)
-const totalPages = ref(0)
-const loading = ref(false)
+const newsList = ref<Object[]>([])
+const currentPage = ref<Number>(1)
+const totalPages = ref<Number>(0)
+const loading = ref<Boolean>(false)
 const noMore = computed(() => {
   if (newsList.value.length === 0) return false
   return currentPage.value >= totalPages.value
@@ -86,10 +86,20 @@ const fetchData = async (category, isLoadMore = false) => {
     loading.value = false
   }
 }
+
+/**
+ *    文章详情
+ * @param id 
+ */
 const viewDetail = (id) => {
   route.push('/news/' + id)
 }
 
+
+/**
+ *   html转text
+ * @param html 
+ */
 const htmlToText = (html) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');

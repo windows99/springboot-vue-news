@@ -31,5 +31,6 @@ public interface NewsService extends IService<News> {
 
     JSONObject getJisunews(String channel);
 
+    List<News> getTop3NewsByViewCount();
 //    boolean batchAddNews(List<News> newsList);
 }

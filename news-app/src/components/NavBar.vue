@@ -1,31 +1,37 @@
 <template>
   <el-header class="header-nav">
-    <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" :ellipsis="false"
-      @select="handleSelect" active-text-color="#409EFF">
-      <el-menu-item>
-        <img style="width: 60px" src="/public/logo.svg" alt="Element logo" />
-      </el-menu-item>
 
-      <el-menu-item index="/">首页</el-menu-item>
-      <el-menu-item index="/recommend">为您推荐</el-menu-item>
-      <el-menu-item index="/hot">时事热点</el-menu-item>
+    <el-row justify="center">
+      <el-col :span="18">
+        <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" :ellipsis="false"
+          @select="handleSelect" active-text-color="#409EFF">
+          <el-menu-item>
+            <img style="width: 60px" src="/public/logo.svg" alt="Element logo" />
+          </el-menu-item>
 
-      <div class="flex-grow"></div>
+          <el-menu-item index="/">首页</el-menu-item>
+          <el-menu-item index="/recommend">为您推荐</el-menu-item>
+          <!-- <el-menu-item index="/hot">时事热点</el-menu-item> -->
 
-      <el-menu-item index="/login" v-if="loginText">登录</el-menu-item>
-      <el-dropdown v-else style="display: flex;align-items: center">
-        <span class="el-dropdown-link">
-          <img style="width: 50px" fit="fill" src="../assets/default-avatar.png" alt="avatar" />
-        </span>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item @click="goToProfile">个人信息</el-dropdown-item>
-            <el-dropdown-item @click="goToHistory">浏览记录</el-dropdown-item>
-            <el-dropdown-item divided @click="logout">注销</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-    </el-menu>
+          <div class="flex-grow"></div>
+
+          <el-menu-item index="/login" v-if="loginText">登录</el-menu-item>
+          <el-dropdown v-else style="display: flex;align-items: center">
+            <span class="el-dropdown-link">
+              <img style="width: 50px" fit="fill" src="../assets/default-avatar.png" alt="avatar" />
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="goToProfile">个人信息</el-dropdown-item>
+                <el-dropdown-item @click="goToHistory">浏览记录</el-dropdown-item>
+                <el-dropdown-item divided @click="logout">注销</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </el-menu>
+      </el-col>
+    </el-row>
+
   </el-header>
 </template>
 
@@ -67,10 +73,6 @@ function logout() {
   z-index: 1000;
   background: #fff;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-.el-menu-demo{
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .flex-grow {

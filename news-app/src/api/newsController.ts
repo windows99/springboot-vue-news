@@ -105,6 +105,16 @@ export async function shelfNewsUsingPut(
   });
 }
 
+/** getTop3NewsByViewCount GET /api/news/top3 */
+export async function getTop3NewsByViewCountUsingGet(options?: {
+  [key: string]: any;
+}) {
+  return request<API.BaseResponseListNews_>("/api/news/top3", {
+    method: "GET",
+    ...(options || {})
+  });
+}
+
 /** updateNews PUT /api/news/update/${param0} */
 export async function updateNewsUsingPut(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

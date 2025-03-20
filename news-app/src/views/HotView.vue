@@ -15,20 +15,7 @@
 import { ref } from 'vue'
 
 // 示例热点新闻数据
-const newsList = ref([
-  {
-    id: 3,
-    title: '热点新闻标题1',
-    summary: '这是热点新闻的摘要内容...',
-    content: '详细内容...'
-  },
-  {
-    id: 4,
-    title: '热点新闻标题2',
-    summary: '这是另一个热点新闻的摘要内容...',
-    content: '详细内容...'
-  }
-])
+const newsList = ref([])
 </script>
 
 <style scoped>
