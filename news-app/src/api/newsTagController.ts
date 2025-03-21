@@ -39,7 +39,6 @@ export async function updateTagUsingPut(
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params;
-  console.log(queryParams)
   return request<API.BaseResponseObject_>(`/api/new-tag/${param0}`, {
     method: "PUT",
     headers: {

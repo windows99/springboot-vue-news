@@ -1,9 +1,6 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from "axios";
 
-export type RequestMethods = Extract<
-  Method,
-  "GET" | "POST" | "put" | "delete" | "patch" | "option" | "head"
->;
+export type RequestMethods = "GET" | "POST" | "delete";
 
 export interface PureHttpError extends AxiosError {
   isCancelRequest?: boolean;

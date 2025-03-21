@@ -5,7 +5,7 @@ export default {
   redirect: "/news/list",
   meta: {
     title: "新闻管理",
-    icon: "news",
+    icon: "memo",
     roles: ["admin", "editor"],
     keepAlive: true
   },

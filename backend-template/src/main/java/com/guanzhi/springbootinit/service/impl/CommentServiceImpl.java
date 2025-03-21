@@ -58,8 +58,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 queryWrapper.eq("newsId", params.get("newsId"));
             }
 
-            if (params.containsKey("author") && params.get("author") != null && !String.valueOf(params.get("author")).isEmpty()) {
-                queryWrapper.like("author", String.valueOf(params.get("author")));
+            if (params.containsKey("userId") && params.get("userId") != null && !String.valueOf(params.get("author")).isEmpty()) {
+                queryWrapper.like("userId", String.valueOf(params.get("userId")));
             }
 
             queryWrapper.eq("isDelete", 0);

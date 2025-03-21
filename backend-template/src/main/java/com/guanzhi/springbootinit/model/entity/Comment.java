@@ -24,6 +24,11 @@ public class Comment implements Serializable {
      * 评论内容
      */
     private String content;
+
+    /**
+     * 新闻标题
+     */
+    private String newsTitle;
     /**
      * 新闻id
      */
@@ -152,6 +157,12 @@ public class Comment implements Serializable {
 
     public void setIsDelete(Integer isDelete) {
         this.isDelete = isDelete;
+    }
+
+    public String getNewsTitle() { return newsTitle; }
+
+    public void setNewsTitle(String newsTitle) {
+        this.newsTitle = newsTitle;
     }
 }
 

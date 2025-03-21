@@ -24,6 +24,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="goToProfile">个人信息</el-dropdown-item>
                 <el-dropdown-item @click="goToHistory">浏览记录</el-dropdown-item>
+                <el-dropdown-item @click="goToComments">我的评论</el-dropdown-item>
                 <el-dropdown-item divided @click="logout">注销</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -50,11 +51,15 @@ const activeIndex = ref(route.currentRoute.value.fullPath)
 function handleSelect(index) {
   route.push(index)
 }
-function goToProfile() {
+const goToProfile = () => {
   route.push('/profile')
 }
-function goToHistory() {
+const goToHistory = () => {
   route.push('/view-history')
+}
+
+const goToComments = () => {
+  route.push('/comments')
 }
 
 

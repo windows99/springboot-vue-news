@@ -108,6 +108,7 @@ declare namespace API {
     isDelete?: number;
     likeNum?: number;
     newsId?: number;
+    newsTitle?: string;
     parentId?: number;
     updateTime?: string;
     userAvatar?: string;

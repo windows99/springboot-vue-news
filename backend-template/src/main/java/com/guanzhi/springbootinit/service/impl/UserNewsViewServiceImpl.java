@@ -48,16 +48,6 @@ public class UserNewsViewServiceImpl implements UserNewsViewService {
         }
 
 
-//        try {
-//            UserNewsView viewRecord = new UserNewsView();
-//            viewRecord.setUserId(userId);
-//            viewRecord.setNewsId(newsId);
-//            viewRecord.setNewsTitle(newsTitle);
-//            userNewsViewMapper.insert(viewRecord);
-//        } catch (Exception e) {
-//            log.error("记录浏览失败", e);
-//            throw new RuntimeException("Failed to record view", e);
-//        }
     }
 
     @Override

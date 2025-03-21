@@ -7,6 +7,7 @@ import NewsDetailView from '../views/NewsDetailView.vue'
 import ProfileView from '../views/my/myInfo.vue'
 import LoginView from '../views/login/index.vue'
 import ViewHistory from '../views/my/ViewHistory.vue'
+import MyComments from '../views/my/MyComments.vue'
 
 const routes = [
   {
@@ -48,6 +49,11 @@ const routes = [
     path: '/view-history',
     name: 'view-history',
     component: ViewHistory
+  },
+  {
+    path: '/comments',
+    name: 'comments',
+    component: MyComments
   },
 ]
 

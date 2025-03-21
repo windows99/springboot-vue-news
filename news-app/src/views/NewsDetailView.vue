@@ -203,7 +203,8 @@ const submitComment = async (): Promise<void> => {
     await addCommentUsingPost({
       content: newComment.value,
       userId: useUserStore.user.id,
-      newsId: news.value.id
+      newsId: news.value.id,
+      newsTitle: news.value.title
     })
     newComment.value = ''
     fetchComments()
