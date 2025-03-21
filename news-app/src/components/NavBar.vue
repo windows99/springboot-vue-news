@@ -18,7 +18,7 @@
           <el-menu-item index="/login" v-if="loginText">登录</el-menu-item>
           <el-dropdown v-else style="display: flex;align-items: center">
             <span class="el-dropdown-link">
-              <img style="width: 50px" fit="fill" src="../assets/default-avatar.png" alt="avatar" />
+              <img style="width: 50px" fit="fill" :src="useUserStore.user.userAvatar" alt="avatar" />
             </span>
             <template #dropdown>
               <el-dropdown-menu>

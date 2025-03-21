@@ -6,8 +6,11 @@ import com.guanzhi.springbootinit.common.ErrorCode;
 import com.guanzhi.springbootinit.constant.CommonConstant;
 import com.guanzhi.springbootinit.exception.BusinessException;
 import com.guanzhi.springbootinit.mapper.NewTagMapper;
+import com.guanzhi.springbootinit.mapper.NewsMapper;
 import com.guanzhi.springbootinit.model.dto.news.NewsTagQueryRequset;
+import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.model.entity.NewsTag;
+import com.guanzhi.springbootinit.service.NewsService;
 import com.guanzhi.springbootinit.service.NewsTagService;
 import com.guanzhi.springbootinit.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,9 @@ public class NewsTagServiceImpl extends ServiceImpl<NewTagMapper, NewsTag> imple
 
     @Autowired
     private NewTagMapper newTagMapper;
+
+    @Autowired
+    private NewsMapper newsMapper;
 
     @Override
     public boolean addTag(NewsTag newsTag) {
@@ -50,6 +56,19 @@ public class NewsTagServiceImpl extends ServiceImpl<NewTagMapper, NewsTag> imple
         }
         return false;
     }
+
+//    private boolean isTagInUse(Long tagId) {
+//        try {
+//            News news = new News();
+//            news.createCriteria().andTagIdsLike("%," + tagId + ",%");
+//            int count = newsMapper.countByExample(example);
+//            return count > 0;
+//        } catch (Exception e) {
+//            log.error("检查标签ID {} 是否在使用中失败", tagId, e);
+//            return true; // 默认视为被使用，防止误删
+//        }
+//    }
+
 
     @Override
     public boolean updateTag(NewsTag newsTag) {

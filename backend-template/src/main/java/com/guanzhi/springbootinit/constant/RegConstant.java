@@ -8,7 +8,7 @@ public interface RegConstant {
     /**
      * 邮箱格式校验
      */
-    String EMAIL_REG = "[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.[a-zA-Z0-9]+";
+    String EMAIL_REG = "^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
 
 
     /**

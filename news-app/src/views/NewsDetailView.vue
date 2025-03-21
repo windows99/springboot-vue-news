@@ -61,8 +61,16 @@
                       <el-avatar :src="comment.userAvatar" />
                       <el-text strong>{{ comment.username }}</el-text>
                       <el-text type="info" size="small">{{ comment.createTime }}</el-text>
+                      <el-button 
+                        v-if="useUserStore.user.id === comment.userId"
+                        type="text" 
+                        size="small" 
+                        @click="deleteComment(comment.id)"
+                      >
+                        删除
+                      </el-button>
                     </el-space>
-                    <div class="mt-2">{{ comment.content }}</div>
+                    <div class="comment-text">{{ comment.content }}</div>
                   </div>
                 </el-space>
               </el-card>
@@ -84,15 +92,15 @@ import { View, Star, Share, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getNewsByIdUsingGet, updateNewsUsingPut } from "@/api/newsController"
 import { useUserStoreHook } from '../stores/modules/user'
-import { getCommentListUsingGet, addCommentUsingPost } from "@/api/commentController"
-import type { News, Comment } from '@/api/typings.d'
+import { getCommentListUsingGet, addCommentUsingPost, deleteCommentByIdUsingDelete } from "@/api/commentController"
+import type { API } from '@/api/typings.d'
 
 // 使用用户store
 const useUserStore = useUserStoreHook()
 const route = useRoute()
 
 // 新闻详情数据
-const news = ref<News>({
+const news = ref<API.News>({
   id: 0,
   title: '',
   content: '',
@@ -103,9 +111,7 @@ const news = ref<News>({
 // 新评论内容
 const newComment = ref<string>('')
 // 评论列表
-const comments = ref<Comment[]>([])
-
-
+const comments = ref<API.Comment[]>([])
 
 // 组件挂载时初始化
 onMounted(async () => {
@@ -119,16 +125,14 @@ onMounted(async () => {
   });
 })
 
-
-
 /**
  * 获取新闻详情
  */
 const fetchNews = async (): Promise<void> => {
-  const newsId = route.params.id
-  const obj = { 
+  const newsId = BigInt(route.params.id).toString();
+  const obj: API.getNewsByIdUsingGETParams = { 
     id: newsId,
-    userId: useUserStore.user.id ? useUserStore.user.id : null 
+    userId: useUserStore.user.id ? useUserStore.user.id : undefined
   }
   const data = await getNewsByIdUsingGet(obj)
   if (data.code === 0) {
@@ -185,6 +189,7 @@ const handleWarningFilled = (): void => {
   ElMessage.success('反馈功能开发中')
 }
 
+
 /**
  * 提交评论
  */
@@ -204,6 +209,23 @@ const submitComment = async (): Promise<void> => {
     fetchComments()
   } else {
     ElMessage.error('请先登录')
+  }
+}
+
+/**
+ * 删除评论
+ */
+const deleteComment = async (commentId: number): Promise<void> => {
+  try {
+    const res = await deleteCommentByIdUsingDelete({ id: commentId })
+    if (res.code === 0) {
+      ElMessage.success('删除成功')
+      fetchComments()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (error) {
+    ElMessage.error('删除失败')
   }
 }
 </script>
@@ -234,5 +256,10 @@ const submitComment = async (): Promise<void> => {
 .interaction-buttons .el-button {
   margin: 0 12px;
   padding: 12px 24px;
+}
+
+.comment-text{
+  font-size: 14px;
+  padding: 8px;
 }
 </style>

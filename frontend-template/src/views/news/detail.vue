@@ -31,6 +31,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getNewsByIdUsingGet } from '@/api/newsController'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const loading = ref(true)
@@ -51,7 +52,7 @@ onMounted(
     try {
       getNewsId.value.id = BigInt(route.params.id).toString()
       const res = await getNewsByIdUsingGet(getNewsId.value)
-      news.value = res
+      news.value = res.data
     } catch (error) {
       console.error(error)
       ElMessage.error('获取新闻详情失败')

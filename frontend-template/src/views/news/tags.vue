@@ -71,7 +71,7 @@ const fetchData = async () => {
 
 
 const formData = ref({
-  id: '',
+  id: 0,
   tagname: ''
 })
 
@@ -82,8 +82,7 @@ const handleCreate = async () => {
 }
 
 const handleEdit = (row: any) => {
-  console.log(row)
-  formData.value.id = row.id
+  formData.value.id = BigInt(row.id).toString()
   formData.value.tagname = row.tagname
   isEdit.value = true
   dialogVisible.value = true
@@ -96,8 +95,12 @@ const handleDelete = async (id: string) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const data = { "id": id }
-    await deleteTagUsingDelete(data)
+    const res = await deleteTagUsingDelete({ "id": +id })
+    console.log(res)
+    if (res.code !== 0) {
+      ElMessage.error('删除失败，该标签下有新闻，无法删除')
+      return
+    }
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
@@ -107,7 +110,9 @@ const handleDelete = async (id: string) => {
 
 const handleSubmit = async () => {
   if (isEdit.value) {
-    const res = await updateTagUsingPut(formData.value)
+    const params = { id: formData.value.id }
+    const data = { tagname: formData.value.tagname }
+    const res = await updateTagUsingPut(params, data)
     if (res.code === 0) {
       ElMessage.success('修改成功')
       dialogVisible.value = false

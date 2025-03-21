@@ -61,20 +61,7 @@ public class NewsController {
     public BaseResponse<String> addNews(@RequestBody News news) {
         newsService.addNews(news);
         return ResultUtils.success("新闻发布成功");
-//        try {
-//            boolean result = newsService.addNews(news);
-//            if (result) {
-//                return ResponseEntity.ok()
-//                        .body(Map.of("message", "News added successfully!", "status", 200));
-//            } else {
-//                return ResponseEntity.badRequest()
-//                        .body(Map.of("message", "Failed to add news.", "status", 400));
-//            }
-//        } catch (Exception e) {
-//            log.error("Error adding news: ", e);
-//            return ResponseEntity.internalServerError()
-//                    .body(Map.of("message", e.getMessage(), "status", 500));
-//        }
+
     }
 
     @PutMapping("/update/{id}")

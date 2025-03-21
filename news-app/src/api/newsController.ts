@@ -23,7 +23,7 @@ export async function addNewsUsingPost(
   body: API.News,
   options?: { [key: string]: any }
 ) {
-  return request<Record<string, any>>("/api/news/add", {
+  return request<API.BaseResponseString_>("/api/news/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

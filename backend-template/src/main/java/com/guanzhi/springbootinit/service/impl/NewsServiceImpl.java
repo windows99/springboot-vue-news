@@ -45,6 +45,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         queryWrapper.eq("isDelete", 0)
                 .eq(request.getCategory() != null, "category", request.getCategory())
                 .eq(request.getStatus() != null, "status", request.getStatus())
+                .eq(request.getCategory() != null, "category", request.getStatus())
                 .like(StringUtils.isNotBlank(request.getTitle()), "title", request.getTitle())
                 .like(StringUtils.isNotBlank(request.getAuthor()), "author", request.getAuthor())
                 .orderByDesc(StringUtils.isBlank(request.getSortField()) ? "createTime" : request.getSortField());

@@ -38,9 +38,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import FooterBar from '@/components/FooterBar.vue'
-import { 
-  getViewHistoryUsingGet, 
-  deleteViewByIdUsingPost, 
+import {
+  getViewHistoryUsingGet,
+  deleteViewByIdUsingPost,
   deleteAllViewsByUserIdUsingPost
 } from '@/api/userNewsViewController'
 import type { NewsView } from '@/api/typings.d'
@@ -95,7 +95,7 @@ const fetchData = async () => {
  * @param row 当前浏览记录项
  */
 const handleView = (row: ViewHistoryItem) => {
-  router.push(`/news/${row.id}`)
+  router.push(`/news/` + row.newsId.toString())
 }
 
 /**

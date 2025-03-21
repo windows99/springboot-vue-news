@@ -1,8 +1,8 @@
 <template>
   <NavBar />
   <div class="content">
-    <el-row class="el-row" :gutter="20">
-      <el-col>
+    <el-row class="el-row"  justify="center" :gutter="20">
+      <el-col :span="18">
         <div class="grid-content">
           <el-card class="box-card">
             <template #header>
@@ -39,8 +39,8 @@
         </div>
       </el-col>
     </el-row>
-    <el-row class="el-row" :gutter="20">
-      <el-col>
+    <el-row class="el-row" justify="center" :gutter="20">
+      <el-col :span="18">
         <el-card>
           <h3 class="title">基本信息</h3>
           <div>
@@ -192,7 +192,7 @@ const confirmEdit = async () => {
 
 .content {
   margin-top: 60px;
-  padding: 10px 100px;
+  padding: 10px 0;
 }
 
 .grid-content {
