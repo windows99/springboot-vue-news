@@ -3,38 +3,22 @@
     <el-card>
       <el-form :inline="true" :model="queryRequest">
         <el-form-item label="用户名">
-          <el-input
-            v-model="queryRequest.userName"
-            placeholder="请输入用户名"
-            clearable
-          />
+          <el-input v-model="queryRequest.userName" placeholder="请输入用户名" clearable />
         </el-form-item>
         <el-form-item label="角色">
-          <el-select
-            v-model="queryRequest.userRole"
-            placeholder="请选择用户角色"
-            clearable
-          >
+          <el-select v-model="queryRequest.userRole" placeholder="请选择用户角色" clearable>
             <el-option label="管理员" value="admin" />
             <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
         <el-form-item label="排序条件">
-          <el-select
-            v-model="queryRequest.sortField"
-            placeholder="请选择排序条件"
-            clearable
-          >
+          <el-select v-model="queryRequest.sortField" placeholder="请选择排序条件" clearable>
             <el-option label="创建时间" value="createTime" />
             <el-option label="更新时间" value="updateTime" />
           </el-select>
         </el-form-item>
         <el-form-item label="排序顺序">
-          <el-select
-            v-model="queryRequest.sortOrder"
-            placeholder="请选择排序顺序"
-            clearable
-          >
+          <el-select v-model="queryRequest.sortOrder" placeholder="请选择排序顺序" clearable>
             <el-option label="升序" value="asc" />
             <el-option label="降序" value="desc" />
           </el-select>
@@ -50,17 +34,12 @@
       <div class="header">
         <h3 class="title">用户列表</h3>
         <div class="config">
-          <el-button :icon="Plus" type="primary" @click="showAdd"
-            >新建
+          <el-button :icon="Plus" type="primary" @click="showAdd">新建
           </el-button>
         </div>
       </div>
       <!--  展示表格-->
-      <el-table
-        :data="pageUserList?.records"
-        style="width: 100%"
-        table-layout="auto"
-      >
+      <el-table :data="pageUserList?.records" style="width: 100%" table-layout="auto">
         <el-table-column fixed type="index" :index="1" />
         <el-table-column fixed prop="userName" label="用户名" />
         <!--    头像-->
@@ -84,46 +63,22 @@
         <el-table-column prop="createTime" label="创建时间" />
         <el-table-column fixed="right" label="操作">
           <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="editUser(scope.row)"
-              >编辑
+            <el-button link type="primary" size="small" @click="editUser(scope.row)">编辑
             </el-button>
-            <el-button
-              link
-              type="danger"
-              size="small"
-              @click="deleteUser(scope.row.id)"
-              >删除
+            <el-button link type="danger" size="small" @click="deleteUser(scope.row.id)">删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
 
       <!--  底部分页选择-->
-      <el-pagination
-        style="margin-top: 15px"
-        v-model:current-page="pageUserList.current"
-        v-model:page-size="pageUserList.size"
-        :page-sizes="[5, 10, 15, 20]"
-        :small="false"
-        :disabled="false"
-        :background="false"
-        layout="total, sizes, prev, pager, next, jumper"
-        :page-count="parseInt(pageUserList.pages)"
-        :total="parseInt(pageUserList.total)"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination style="margin-top: 15px" v-model:current-page="pageUserList.current"
+        v-model:page-size="pageUserList.size" :page-sizes="[5, 10, 15, 20]" :small="false" :disabled="false"
+        :background="false" layout="total, sizes, prev, pager, next, jumper" :page-count="parseInt(pageUserList.pages)"
+        :total="parseInt(pageUserList.total)" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </el-card>
     <!--  编辑信息对话框-->
-    <el-dialog
-      v-model="editFormVisible"
-      title="编辑用户信息"
-      style="width: 580px"
-    >
+    <el-dialog v-model="editFormVisible" title="编辑用户信息" style="width: 580px">
       <el-form :model="currentUser">
         <el-form-item label="用户名" :label-width="formLabelWidth">
           <el-input v-model="currentUser.userName" autocomplete="off" />
@@ -131,10 +86,7 @@
         <!--      头像修改-->
         <el-form-item label="头像" :label-width="formLabelWidth">
           <!--          自定义组件-->
-          <upload-avatar
-            v-model:img-url="currentUser.userAvatar"
-            biz="user_avatar"
-          />
+          <upload-avatar v-model:img-url="currentUser.userAvatar" biz="user_avatar" />
         </el-form-item>
         <el-form-item label="简介" :label-width="formLabelWidth">
           <el-input v-model="currentUser.userProfile" autocomplete="off" />
@@ -145,12 +97,8 @@
         <!--      性别选项-->
         <el-form-item label="性别" :label-width="formLabelWidth">
           <el-select v-model="currentUser.gender" placeholder="Select">
-            <el-option
-              v-for="gender in genderOptions"
-              :key="gender.value"
-              :label="gender.label"
-              :value="gender.value"
-            />
+            <el-option v-for="gender in genderOptions" :key="gender.value" :label="gender.label"
+              :value="gender.value" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -163,29 +111,15 @@
     </el-dialog>
 
     <!--    新增用户-->
-    <el-dialog
-      v-model="showAddDialog"
-      title="新增用户"
-      width="30%"
-      center
-      draggable
-    >
-      <el-form
-        label-position="right"
-        label-width="80px"
-        :model="addUserInfo"
-        style="max-width: 460px"
-      >
+    <el-dialog v-model="showAddDialog" title="新增用户" width="30%" center draggable>
+      <el-form label-position="right" label-width="80px" :model="addUserInfo" style="max-width: 460px">
         <el-form-item label="用户名">
           <el-input v-model="addUserInfo.userName" />
         </el-form-item>
         <!--      头像修改-->
         <el-form-item label="头像">
           <!--          自定义组件-->
-          <upload-avatar
-            v-model:img-url="addUserInfo.userAvatar"
-            biz="user_avatar"
-          />
+          <upload-avatar v-model:img-url="addUserInfo.userAvatar" biz="user_avatar" />
         </el-form-item>
         <el-form-item label="密码">
           <el-input v-model="addUserInfo.userPassword" />
@@ -197,24 +131,18 @@
           <el-input type="textarea" v-model="addUserInfo.userProfile" />
         </el-form-item>
         <el-form-item label="性别">
-          <el-switch
-            v-model="addUserInfo.gender"
-            style="
+          <el-switch v-model="addUserInfo.gender" style="
               --el-switch-on-color: #99daf8;
               --el-switch-off-color: #f077ac;
-            "
-            inline-prompt
-            active-text="男"
-            inactive-text="女"
-            :active-value="1"
-            :inactive-value="0"
-          />
+            " inline-prompt active-text="男" inactive-text="女" :active-value="1" :inactive-value="0" />
         </el-form-item>
         <el-form-item label="用户角色">
           <el-select v-model="addUserInfo.userRole" class="m-2">
             <el-option key="管理员" label="管理员" value="admin" />
             <el-option key="普通用户" label="普通用户" value="user" />
             <el-option key="禁用" label="禁用" value="ban" />
+            <el-option key="编辑" label="编辑" value="editor" />
+            <el-option key="审核" label="审核" value="manage" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -286,7 +214,7 @@ const resetQuery = () => {
 };
 
 // 删除确认框
-const deleteUser = id => {
+const deleteUser = (id) => {
   ElMessageBox.confirm("注意，此操作不可撤销，是否继续？", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
@@ -295,8 +223,9 @@ const deleteUser = id => {
     draggable: true
   })
     .then(async () => {
+      console.log(id)
       // 删除用户
-      const res = await deleteUserUsingPost(id);
+      const res = await deleteUserUsingPost({ id: id });
       if (res.code === 0) {
         message("删除成功", { type: "success" });
         await listUserByPage();

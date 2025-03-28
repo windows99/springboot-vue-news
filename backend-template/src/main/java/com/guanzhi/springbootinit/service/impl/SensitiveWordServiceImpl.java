@@ -1,93 +1,104 @@
 package com.guanzhi.springbootinit.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.mapper.SensitiveWordMapper;
 import com.guanzhi.springbootinit.model.entity.SensitiveWord;
 import com.guanzhi.springbootinit.service.SensitiveWordService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.SqlSession;
-import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class SensitiveWordServiceImpl implements SensitiveWordService {
+public class SensitiveWordServiceImpl extends ServiceImpl<SensitiveWordMapper, SensitiveWord> implements SensitiveWordService {
 
     @Autowired
     private SensitiveWordMapper sensitiveWordMapper;
 
-    @Override
-    public void addSensitiveWord(String word) {
-        try {
-//            if (checkWordExists(word)) {
-//                log.warn("敏感词已经存在: {}", word);
-//                return;
-//            }
-            SensitiveWord sensitiveWord = new SensitiveWord();
-            sensitiveWord.setWord(word);
-            sensitiveWord.setStatus(1);
-            sensitiveWordMapper.insert(sensitiveWord);
-        } catch (Exception e) {
-            log.error("添加敏感词失败: {}", word, e);
-            throw new RuntimeException("Failed to add sensitive word: " + word, e);
-        }
-    }
 
     @Override
-    public void removeSensitiveWord(String word) {
+    public boolean addSensitiveWord(SensitiveWord sensitiveWord) {
+        sensitiveWordMapper.insert(sensitiveWord);
+        return true;
+    }
+
+
+    @Override
+    public List<SensitiveWord> getSensitiveWordList() {
+        return baseMapper.selectList(null);
+    }
+
+
+//    @Override
+//    public void removeSensitiveWord(String word) {
+//        try {
+/// /            if (!checkWordExists(word)) {
+/// /                log.warn("敏感词不存在: {}", word);
+/// /                return;
+/// /            }
+///
+/// @return
+//            SensitiveWord sensitiveWord = new SensitiveWord();
+//            sensitiveWord.setWord(word);
+//            sensitiveWord.setStatus(0);
+//            sensitiveWordMapper.updateById(sensitiveWord);
+//        } catch (Exception e) {
+//            log.error("移除敏感词失败: {}", word, e);
+//            throw new RuntimeException("Failed to remove sensitive word: " + word, e);
+//        }
+//    }
+//
+    @Override
+    public boolean updateSensitiveWord(SensitiveWord sensitiveWord) {
         try {
-//            if (!checkWordExists(word)) {
-//                log.warn("敏感词不存在: {}", word);
-//                return;
-//            }
-            SensitiveWord sensitiveWord = new SensitiveWord();
-            sensitiveWord.setWord(word);
-            sensitiveWord.setStatus(0);
             sensitiveWordMapper.updateById(sensitiveWord);
         } catch (Exception e) {
-            log.error("移除敏感词失败: {}", word, e);
-            throw new RuntimeException("Failed to remove sensitive word: " + word, e);
+            log.error("更新敏感词失败:{}", sensitiveWord);
+            throw new RuntimeException("Failed to update sensitive word from ", e);
         }
+        return false;
     }
 
     @Override
-    public void updateSensitiveWord(String oldWord, String newWord) {
+    public boolean deleteSensitiveWord(Long id){
         try {
-            addSensitiveWord(newWord);
-            removeSensitiveWord(oldWord);
+            int result = sensitiveWordMapper.deleteById(id);
+            if (result == 0) {
+                throw new RuntimeException("Failed to delete news tag with id: " + id);
+            }
         } catch (Exception e) {
-            log.error("更新敏感词失败: 从 {} 到 {}", oldWord, newWord, e);
-            throw new RuntimeException("Failed to update sensitive word from " + oldWord + " to " + newWord, e);
+            log.error("Delete news tag error: ", e);
+            throw new RuntimeException(e);
         }
+        return true;
     }
-
-    @Override
-    public List<String> getSensitiveWords() {
-        try {
-            List<SensitiveWord> sensitiveWordList = sensitiveWordMapper.selectList(null);
-            return sensitiveWordList.stream()
-                    .filter(word -> word.getStatus() == 1)
-                    .map(SensitiveWord::getWord)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("获取敏感词失败", e);
-            throw new RuntimeException("Failed to get sensitive words", e);
-        }
-    }
-
-    @Override
-    public boolean checkContentForSensitive(String content) {
-        try {
-            List<String> sensitiveWords = getSensitiveWords();
-            return !sensitiveWords.isEmpty() && sensitiveWords.parallelStream().anyMatch(word -> content.contains(word));
-        } catch (Exception e) {
-            log.error("检查内容是否包含敏感词失败", e);
-            return false;
-        }
-    }
+//
+//    @Override
+//    public List<String> getSensitiveWords() {
+//        try {
+//            List<SensitiveWord> sensitiveWordList = sensitiveWordMapper.selectList(null);
+//            return sensitiveWordList.stream()
+//                    .filter(word -> word.getStatus() == 1)
+//                    .map(SensitiveWord::getWord)
+//                    .collect(Collectors.toList());
+//        } catch (Exception e) {
+//            log.error("获取敏感词失败", e);
+//            throw new RuntimeException("Failed to get sensitive words", e);
+//        }
+//    }
+//
+//    @Override
+//    public boolean checkContentForSensitive(String content) {
+//        try {
+//            List<String> sensitiveWords = getSensitiveWords();
+//            return !sensitiveWords.isEmpty() && sensitiveWords.parallelStream().anyMatch(word -> content.contains(word));
+//        } catch (Exception e) {
+//            log.error("检查内容是否包含敏感词失败", e);
+//            return false;
+//        }
+//    }
 
 //    private boolean checkWordExists(String word) {
 //        try {

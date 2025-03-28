@@ -86,7 +86,7 @@ public class NewsTagServiceImpl extends ServiceImpl<NewTagMapper, NewsTag> imple
         try {
             return newTagMapper.selectById(tagId);
         } catch (Exception e) {
-            log.error("Failed to fetch news tag by id: {}");
+            log.error("Failed to fetch news tag by id: {}", tagId);
             throw new RuntimeException("Failed to fetch news tag", e);
         }
     }

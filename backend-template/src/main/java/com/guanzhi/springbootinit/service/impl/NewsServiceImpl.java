@@ -45,7 +45,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         queryWrapper.eq("isDelete", 0)
                 .eq(request.getCategory() != null, "category", request.getCategory())
                 .eq(request.getStatus() != null, "status", request.getStatus())
-                .eq(request.getCategory() != null, "category", request.getStatus())
                 .like(StringUtils.isNotBlank(request.getTitle()), "title", request.getTitle())
                 .like(StringUtils.isNotBlank(request.getAuthor()), "author", request.getAuthor())
                 .orderByDesc(StringUtils.isBlank(request.getSortField()) ? "createTime" : request.getSortField());
@@ -78,9 +77,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     public boolean addNews(News news) {
 
         try {
-            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
-                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
-            }
+//            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
+//                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
+//            }
             int result =  newsMapper.insert(news);
             return result > 0;
         } catch (BusinessException be) {
@@ -162,12 +161,12 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Override
     public void publishNews(Long newsId) {
-        updateNewsStatus(newsId, 1);
+        updateNewsStatus(newsId, 3);
     }
 
     @Override
     public void shelfNews(Long newsId) {
-        updateNewsStatus(newsId, 0);
+        updateNewsStatus(newsId, 5);
     }
 
 

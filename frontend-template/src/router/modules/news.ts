@@ -16,6 +16,7 @@ export default {
       component: () => import("@/views/news/list.vue"),
       meta: {
         title: "新闻列表",
+        roles: ["admin", "editor", "manage"],
         showParent: true,
         keepAlive: true,
       }
@@ -36,6 +37,7 @@ export default {
       component: () => import("@/views/news/import.vue"),
       meta: {
         title: "导入新闻",
+        roles: ["admin"],
         hiddenTag: true
       }
     },
@@ -50,14 +52,24 @@ export default {
       }
     },
     {
-      path: '/news/tags',
-      name: 'NewsTags',
-      component: () => import('@/views/news/tags.vue'),
+      path: '/news/review',
+      name: 'NewsReview',
+      component: () => import('@/views/news/review.vue'),
       meta: {
-        title: '新闻标签管理',
+        title: '新闻审核',
+        roles: ["admin", "manage"],
+        keepAlive: true
+      }
+    },
+    {
+      path: '/news/publish',
+      name: 'NewsPublish',
+      component: () => import('@/views/news/publish.vue'),
+      meta: {
+        title: '新闻发布',
+        roles: ["admin", "manage"],
         keepAlive: true
       }
     }
-
   ]
 }

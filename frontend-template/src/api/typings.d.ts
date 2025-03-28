@@ -1,4 +1,9 @@
 declare namespace API {
+  type addSensitiveWordUsingPOSTParams = {
+    /** word */
+    word?: string;
+  };
+
   type BaseResponseBoolean_ = {
     code?: number;
     data?: boolean;
@@ -26,6 +31,12 @@ declare namespace API {
   type BaseResponseListNewsTag_ = {
     code?: number;
     data?: NewsTag[];
+    message?: string;
+  };
+
+  type BaseResponseListSensitiveWord_ = {
+    code?: number;
+    data?: SensitiveWord[];
     message?: string;
   };
 
@@ -140,6 +151,11 @@ declare namespace API {
     id?: number;
   };
 
+  type deleteSensitiveWordUsingDELETEParams = {
+    /** id */
+    id: number;
+  };
+
   type deleteTagUsingDELETEParams = {
     /** id */
     id: number;
@@ -229,9 +245,9 @@ declare namespace API {
     coverimage?: string;
     createtime?: string;
     id?: number;
-    images?: string;
     isdelete?: number;
     likecount?: number;
+    notes?: string;
     source?: string;
     sourceurl?: string;
     status?: number;
@@ -318,12 +334,25 @@ declare namespace API {
     userId: number;
   };
 
+  type SensitiveWord = {
+    createtime?: string;
+    id?: number;
+    status?: number;
+    updatetime?: string;
+    word?: string;
+  };
+
   type shelfNewsUsingPUTParams = {
     /** id */
     id: number;
   };
 
   type updateNewsUsingPUTParams = {
+    /** id */
+    id: number;
+  };
+
+  type updateSensitiveWordUsingPUTParams = {
     /** id */
     id: number;
   };

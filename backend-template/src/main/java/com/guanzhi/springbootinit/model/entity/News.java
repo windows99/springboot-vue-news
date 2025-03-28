@@ -36,10 +36,7 @@ public class News implements Serializable {
      * 封面图片
      */
     private String coverImage;
-    /**
-     * 图片列表(JSON数组)
-     */
-    private String images;
+
     /**
      * 来源
      */
@@ -56,6 +53,10 @@ public class News implements Serializable {
      * 分类
      */
     private String category;
+    /**
+     * 备注
+     */
+    private String notes;
     /**
      * 状态 0-草稿 1-已发布
      */
@@ -117,14 +118,6 @@ public class News implements Serializable {
 
     public void setCoverimage(String coverImage) {
         this.coverImage = coverImage;
-    }
-
-    public String getImages() {
-        return images;
-    }
-
-    public void setImages(String images) {
-        this.images = images;
     }
 
     public String getSource() {
@@ -215,5 +208,12 @@ public class News implements Serializable {
         this.isDelete = isDelete;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 }
 

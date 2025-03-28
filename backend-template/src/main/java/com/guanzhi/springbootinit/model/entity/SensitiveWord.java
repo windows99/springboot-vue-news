@@ -1,5 +1,8 @@
 package com.guanzhi.springbootinit.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.util.Date;
 import java.io.Serializable;
 
@@ -9,6 +12,8 @@ import java.io.Serializable;
  * @author makejava
  * @since 2025-03-18 23:02:30
  */
+@TableName(value = "sensitive_word")
+@Data
 public class SensitiveWord implements Serializable {
     private static final long serialVersionUID = 766844699310399828L;
 

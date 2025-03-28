@@ -103,57 +103,27 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-form
-    ref="ruleFormRef"
-    :model="loginForm"
-    :rules="formRules"
-    size="large"
-    v-if="currentPage === 'login'"
-  >
+  <el-form ref="ruleFormRef" :model="loginForm" :rules="formRules" size="large" v-if="currentPage === 'login'">
     <Motion :delay="100">
       <el-form-item prop="email">
-        <el-input
-          clearable
-          v-model="loginForm.email"
-          placeholder="邮箱号"
-          :prefix-icon="useRenderIcon(Mail)"
-        />
+        <el-input clearable v-model="loginForm.email" placeholder="邮箱号" :prefix-icon="useRenderIcon(Mail)" />
       </el-form-item>
     </Motion>
 
     <Motion :delay="150">
       <el-form-item prop="userPassword" style="margin-bottom: 5px !important">
-        <el-input
-          clearable
-          show-password
-          v-model="loginForm.userPassword"
-          placeholder="密码"
-          :prefix-icon="useRenderIcon(Lock)"
-        />
+        <el-input clearable show-password v-model="loginForm.userPassword" placeholder="密码"
+          :prefix-icon="useRenderIcon(Lock)" />
       </el-form-item>
     </Motion>
     <Motion :delay="200">
-      <el-checkbox
-        style="display: flex"
-        v-model="check"
-        label="记住密码"
-        size="large"
-      />
+      <el-checkbox style="display: flex" v-model="check" label="记住密码" size="large" />
     </Motion>
     <Motion :delay="250">
-      <el-button
-        class="w-full"
-        size="default"
-        type="primary"
-        :loading="loading"
-        @click="onLogin(ruleFormRef)"
-      >
+      <el-button class="w-full" size="default" type="primary" :loading="loading" @click="onLogin(ruleFormRef)">
         登录
       </el-button>
-      <div
-        style="margin-top: 10px"
-        class="w-full h-[20px] flex justify-between items-center"
-      >
+      <div style="margin-top: 10px" class="w-full h-[20px] flex justify-between items-center">
         <el-button link type="primary" @click="changePage('forget')">
           忘记密码?
         </el-button>

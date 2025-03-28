@@ -22,8 +22,7 @@
           <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4">
             <el-form-item label="状态">
               <el-select v-model="queryRequest.status" placeholder="全部状态" clearable>
-                <el-option label="已发布" value="1" />
-                <el-option label="草稿" value="0" />
+                <el-option v-for="item in newsStatusList" :key="item.id" :label="item.name" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -62,24 +61,18 @@
         <el-table-column prop="author" label="作者" width="120" />
         <el-table-column prop="category" label="分类" width="120" :formatter="formatCategory" />
         <el-table-column prop="createtime" label="发布日期" width="180" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.status === 1 ? '已发布' : '草稿' }}
-            </el-tag>
-          </template>
+        <el-table-column prop="status" label="状态" width="100" :formatter="formatStatus">
         </el-table-column>
+        <el-table-column prop="notes" label="备注" width="180" />
+
         <el-table-column label="操作" width="300">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleView(row.id)">查看</el-button>
-            <el-button type="warning" size="small" @click="handleEdit(row.id)">编辑</el-button>
-            <el-button v-if="row.status === 0" type="success" size="small" @click="handlePublish(row)">
-              发布
-            </el-button>
-            <el-button v-if="row.status === 1" type="info" size="small" @click="handleUnpublish(row)">
-              下架
-            </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
+            <el-button-group v-for="btn in btnList" :key="btn.title">
+              <el-button v-if="btn.showBtn(row)" :type="btn.type" size="small" @click="btn.fn(row)" v-auth="btn.roles">
+                {{ btn.title }}
+              </el-button>
+            </el-button-group>
+
           </template>
         </el-table-column>
       </el-table>
@@ -93,8 +86,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, pushScopeId } from 'vue'
 import { useRouter } from 'vue-router'
+
+interface ButtonItem {
+  title: string
+  type: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'text'
+  fn: (row: any) => void
+  roles: string[]
+  showBtn?: (row) => Boolean
+}
 import {
   getNewsListsUsingPost,
   deleteNewsUsingDelete,
@@ -103,18 +104,22 @@ import {
 } from '@/api/newsController'
 import { ElInput, ElMessage, ElMessageBox, ElTag, ElBacktop } from "element-plus";
 import { useNewsStore } from "@/store/modules/news"
+import { Auth } from "@/components/ReAuth";
 
+
+console.log(Auth)
 
 const newsTagList = useNewsStore().newsTagList
+const newsStatusList = useNewsStore().newsStatusList
 
 const router = useRouter()
 
 // 表格数据
 const tableData = ref([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
+const currentPage = ref<number>(1)
+const pageSize = ref<number>(10)
+const total = ref<number>(0)
 const dateRange = ref()
 const queryRequest = ref({
   current: 1,
@@ -126,10 +131,67 @@ const queryRequest = ref({
   startTime: undefined,
   endTime: undefined
 })
-function formatCategory(row) {
+
+const btnList = ref<Array<ButtonItem>>([
+  {
+    title: "查看",
+    type: "primary",
+    fn: (row) => handleView(row.id),
+    roles: ["admin", "editor", "guest"],
+    showBtn: (row) => true
+  },
+  {
+    title: "编辑",
+    type: "warning",
+    fn: (row) => handleEdit(row.id),
+    roles: ["admin", "editor"],
+    // showBtn: (row) => [1, 2, 3].includes(row.status)
+    showBtn: (row) => row.status == 0
+  },
+  {
+    title: "审核",
+    type: "success",
+    fn: (row) => handleEdit(row.id),
+    roles: ["admin", "editor"],
+    // showBtn: (row) => [1, 2, 3].includes(row.status)
+    showBtn: (row) => row.status == 0
+  },
+  // {
+  //   title: "发布",
+  //   type: "success",
+  //   fn: (row) => handlePublish(row),
+  //   roles: ["admin", "editor"],
+  //   showBtn: (row) => row.status == 2
+  // },
+  {
+    title: "下架",
+    type: "info",
+    fn: (row) => handleUnpublish(row),
+    roles: ["admin", "editor"],
+    showBtn: (row) => row.status == 3
+  },
+  {
+    title: "删除",
+    type: "danger",
+    fn: (row) => handleDelete(row.id),
+    roles: ["admin"],
+    showBtn: () => true
+  }
+])
+
+//  格式化分类
+const formatCategory = (row) => {
   const tag = newsTagList.find(item => item.id === row.category)
   return tag ? tag.tagname : '-'
 }
+
+//  格式化状态
+const formatStatus = (row) => {
+  const tag = newsStatusList.find(item => item.id === row.status)
+  return tag.name
+}
+
+
 
 // 处理日期范围
 // watch(dateRange, (newVal) => {

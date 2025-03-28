@@ -122,11 +122,10 @@ const ImportNews = async () => {
     ElMessage.error('请先获取新闻')
     return
   }
-  newsList.value.forEach(async (element, index) => {
-    if (index > 5)
-      await addNewsUsingPost(element)
+  newsList.value.forEach(async (element) => {
+    await addNewsUsingPost(element)
   });
-
+  ElMessage.success('导入成功')
 }
 
 
