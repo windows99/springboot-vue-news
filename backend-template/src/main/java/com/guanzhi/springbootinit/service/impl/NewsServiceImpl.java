@@ -164,9 +164,20 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         updateNewsStatus(newsId, 3);
     }
 
+
     @Override
     public void shelfNews(Long newsId) {
         updateNewsStatus(newsId, 5);
+    }
+
+    /**
+     *   更改状态
+     * @param newsId  新闻id
+     * @param statusInt  状态数字
+     */
+    @Override
+    public void  setStatusNews(Long newsId, int statusInt){
+        updateNewsStatus(newsId, statusInt);
     }
 
 

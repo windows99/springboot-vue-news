@@ -68,7 +68,7 @@
         <el-table-column label="操作" width="300">
           <template #default="{ row }">
             <el-button-group v-for="btn in btnList" :key="btn.title">
-              <el-button v-if="btn.showBtn(row)" :type="btn.type" size="small" @click="btn.fn(row)" v-auth="btn.roles">
+              <el-button v-if="btn.showBtn(row)" :type="btn.type" size="small" @click="btn.fn(row)">
                 {{ btn.title }}
               </el-button>
             </el-button-group>
@@ -100,7 +100,7 @@ import {
   getNewsListsUsingPost,
   deleteNewsUsingDelete,
   publishNewsUsingPut,
-  shelfNewsUsingPut
+  shelfNewsUsingPut, setStatusNewsUsingPut
 } from '@/api/newsController'
 import { ElInput, ElMessage, ElMessageBox, ElTag, ElBacktop } from "element-plus";
 import { useNewsStore } from "@/store/modules/news"
@@ -149,12 +149,12 @@ const btnList = ref<Array<ButtonItem>>([
     showBtn: (row) => row.status == 0
   },
   {
-    title: "审核",
+    title: "提交",
     type: "success",
-    fn: (row) => handleEdit(row.id),
+    fn: (row) => handleSubmit(row.id),
     roles: ["admin", "editor"],
     // showBtn: (row) => [1, 2, 3].includes(row.status)
-    showBtn: (row) => row.status == 0
+    showBtn: (row) => row.status == (0 || 4)
   },
   // {
   //   title: "发布",
@@ -269,6 +269,12 @@ const handleView = (id: number) => {
 // 编辑新闻
 const handleEdit = (id: number) => {
   router.push(`/news/create?id=${id}`)
+}
+
+const handleSubmit = async (id: number) => {
+  console.log(id)
+  await setStatusNewsUsingPut({ "id": id, statusInt: 1 })
+  ElMessage.success('提交成功')
 }
 
 const handleDelete = (id: number) => {

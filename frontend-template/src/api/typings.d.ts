@@ -342,6 +342,13 @@ declare namespace API {
     word?: string;
   };
 
+  type setStatusNewsUsingPUTParams = {
+    /** id */
+    id: number;
+    /** statusInt */
+    statusInt: number;
+  };
+
   type shelfNewsUsingPUTParams = {
     /** id */
     id: number;

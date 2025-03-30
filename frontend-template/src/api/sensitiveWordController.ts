@@ -53,8 +53,10 @@ export async function deleteSensitiveWordUsingDelete(
   );
 }
 
-/** getTagList GET /api/sensitive-word/list */
-export async function getSensitiveWordUsingGet1(options?: { [key: string]: any }) {
+/** getSensitiveWord GET /api/sensitive-word/list */
+export async function getSensitiveWordUsingGet(options?: {
+  [key: string]: any;
+}) {
   return request<API.BaseResponseListSensitiveWord_>(
     "/api/sensitive-word/list",
     {

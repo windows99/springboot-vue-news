@@ -115,6 +115,13 @@ public class NewsController {
     }
 
 
+    @PutMapping("/setStatus/{id}")
+    public BaseResponse<String> setStatusNews(@PathVariable Long id, @RequestParam int statusInt) {
+        newsService.setStatusNews(id, statusInt);
+        return ResultUtils.success("更新完成");
+    }
+
+
 
 
     @GetMapping("/jisunews/list")
@@ -123,13 +130,6 @@ public class NewsController {
         return res;
     }
 
-//    @PostMapping("/batch")
-//    public BaseResponse<?> batchAddNews(
-//            @RequestBody List<News> newsList) {
-//       boolean res =  newsService.batchAddNews(newsList);
-//
-//        return ResultUtils.success(res);
-//    }
 
     @GetMapping("/top3")
     public BaseResponse<List<News>> getTop3NewsByViewCount() {
