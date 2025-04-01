@@ -5,12 +5,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.common.ErrorCode;
 import com.guanzhi.springbootinit.constant.CommonConstant;
 import com.guanzhi.springbootinit.exception.BusinessException;
-import com.guanzhi.springbootinit.mapper.NewTagMapper;
+import com.guanzhi.springbootinit.mapper.NewsTagMapper;
 import com.guanzhi.springbootinit.mapper.NewsMapper;
 import com.guanzhi.springbootinit.model.dto.news.NewsTagQueryRequset;
-import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.model.entity.NewsTag;
-import com.guanzhi.springbootinit.service.NewsService;
 import com.guanzhi.springbootinit.service.NewsTagService;
 import com.guanzhi.springbootinit.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,11 +21,11 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class NewsTagServiceImpl extends ServiceImpl<NewTagMapper, NewsTag> implements NewsTagService {
+public class NewsTagServiceImpl extends ServiceImpl<NewsTagMapper, NewsTag> implements NewsTagService {
 
 
     @Autowired
-    private NewTagMapper newTagMapper;
+    private NewsTagMapper newTagMapper;
 
     @Autowired
     private NewsMapper newsMapper;

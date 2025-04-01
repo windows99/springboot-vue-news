@@ -52,7 +52,7 @@ public class News implements Serializable {
     /**
      * 分类
      */
-    private String category;
+    private Long category;
     /**
      * 备注
      */
@@ -64,7 +64,8 @@ public class News implements Serializable {
     /**
      * 浏览量
      */
-    private Integer viewCount;
+    @TableField("viewCount")
+    private Integer viewcount;
     /**
      * 点赞数
      */
@@ -73,20 +74,16 @@ public class News implements Serializable {
      * 评论数
      */
     private Integer commentCount;
-    /**
-     * 创建时间
-     */
-    private Date createTime;
+
+    @TableField("createTime")
+    private Date createtime;
     /**
      * 更新时间
      */
     private Date updateTime;
-    /**
-     * 是否删除
-     */
-    @TableLogic
-    private Integer isDelete;
 
+    @TableField("isDelete")
+    private Integer isdelete;
 
     public Long getId() {
         return id;
@@ -144,11 +141,11 @@ public class News implements Serializable {
         this.author = author;
     }
 
-    public String getCategory() {
+    public Long getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Long category) {
         this.category = category;
     }
 
@@ -161,11 +158,11 @@ public class News implements Serializable {
     }
 
     public Integer getViewcount() {
-        return viewCount;
+        return viewcount;
     }
 
-    public void setViewcount(Integer viewCount) {
-        this.viewCount = viewCount;
+    public void setViewcount(Integer viewcount) {
+        this.viewcount = viewcount;
     }
 
     public Integer getLikecount() {
@@ -185,11 +182,11 @@ public class News implements Serializable {
     }
 
     public Date getCreatetime() {
-        return createTime;
+        return createtime;
     }
 
-    public void setCreatetime(Date createTime) {
-        this.createTime = createTime;
+    public void setCreatetime(Date createtime) {
+        this.createtime = createtime;
     }
 
     public Date getUpdatetime() {
@@ -201,11 +198,11 @@ public class News implements Serializable {
     }
 
     public Integer getIsdelete() {
-        return isDelete;
+        return isdelete;
     }
 
-    public void setIsdelete(Integer isDelete) {
-        this.isDelete = isDelete;
+    public void setIsdelete(Integer isdelete) {
+        this.isdelete = isdelete;
     }
 
     public String getNotes() {
@@ -215,5 +212,7 @@ public class News implements Serializable {
     public void setNotes(String notes) {
         this.notes = notes;
     }
+
+
 }
 

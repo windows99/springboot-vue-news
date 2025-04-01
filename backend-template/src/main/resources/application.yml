@@ -1,5 +1,8 @@
 # 公共配置文件
 spring:
+  thymeleaf:
+    check-template: false
+    check-template-location: false
   application:
     name: backend-template
   # 默认 dev 环境
