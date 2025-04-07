@@ -7,6 +7,8 @@ import * as commonController from "./commonController";
 import * as fileController from "./fileController";
 import * as newsTagController from "./newsTagController";
 import * as newsController from "./newsController";
+import * as newsRecommendController from "./newsRecommendController";
+import * as sensitiveWordController from "./sensitiveWordController";
 import * as userController from "./userController";
 import * as userNewsViewController from "./userNewsViewController";
 export default {
@@ -15,6 +17,8 @@ export default {
   fileController,
   newsTagController,
   newsController,
+  newsRecommendController,
+  sensitiveWordController,
   userController,
   userNewsViewController
 };

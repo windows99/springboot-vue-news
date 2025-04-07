@@ -1,4 +1,9 @@
 declare namespace API {
+  type addSensitiveWordUsingPOSTParams = {
+    /** word */
+    word?: string;
+  };
+
   type BaseResponseBoolean_ = {
     code?: number;
     data?: boolean;
@@ -23,9 +28,21 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListNewsRecommendDTO_ = {
+    code?: number;
+    data?: NewsRecommendDTO[];
+    message?: string;
+  };
+
   type BaseResponseListNewsTag_ = {
     code?: number;
     data?: NewsTag[];
+    message?: string;
+  };
+
+  type BaseResponseListSensitiveWord_ = {
+    code?: number;
+    data?: SensitiveWord[];
     message?: string;
   };
 
@@ -140,6 +157,11 @@ declare namespace API {
     id?: number;
   };
 
+  type deleteSensitiveWordUsingDELETEParams = {
+    /** id */
+    id: number;
+  };
+
   type deleteTagUsingDELETEParams = {
     /** id */
     id: number;
@@ -168,6 +190,11 @@ declare namespace API {
     pageSize?: number;
   };
 
+  type getHotNewsUsingGETParams = {
+    /** limit */
+    limit?: number;
+  };
+
   type getJisunewsUsingGETParams = {
     /** channel */
     channel?: string;
@@ -178,6 +205,13 @@ declare namespace API {
     id: number;
     /** userId */
     userId?: number;
+  };
+
+  type getRecommendForUserUsingGETParams = {
+    /** limit */
+    limit?: number;
+    /** userId */
+    userId: number;
   };
 
   type getTagListUsingGETParams = {
@@ -223,15 +257,15 @@ declare namespace API {
 
   type News = {
     author?: string;
-    category?: string;
+    category?: number;
     commentcount?: number;
     content?: string;
     coverimage?: string;
     createtime?: string;
     id?: number;
-    images?: string;
     isdelete?: number;
     likecount?: number;
+    notes?: string;
     source?: string;
     sourceurl?: string;
     status?: number;
@@ -250,6 +284,16 @@ declare namespace API {
     sortOrder?: string;
     status?: number;
     title?: string;
+  };
+
+  type NewsRecommendDTO = {
+    category?: number;
+    categoryName?: string;
+    coverImage?: string;
+    createTime?: string;
+    id?: number;
+    title?: string;
+    viewCount?: number;
   };
 
   type NewsTag = {
@@ -309,6 +353,11 @@ declare namespace API {
     id: number;
   };
 
+  type pushNewsUsingPOSTParams = {
+    /** userId */
+    userId?: number;
+  };
+
   type recordViewUsingPOSTParams = {
     /** newsId */
     newsId: number;
@@ -318,12 +367,39 @@ declare namespace API {
     userId: number;
   };
 
+  type SensitiveWord = {
+    createtime?: string;
+    id?: number;
+    status?: number;
+    updatetime?: string;
+    word?: string;
+  };
+
+  type setStatusNewsUsingPUTParams = {
+    /** id */
+    id: number;
+    /** statusInt */
+    statusInt: number;
+  };
+
   type shelfNewsUsingPUTParams = {
     /** id */
     id: number;
   };
 
+  type testWebSocketUsingGETParams = {
+    /** message */
+    message: string;
+    /** userId */
+    userId: string;
+  };
+
   type updateNewsUsingPUTParams = {
+    /** id */
+    id: number;
+  };
+
+  type updateSensitiveWordUsingPUTParams = {
     /** id */
     id: number;
   };

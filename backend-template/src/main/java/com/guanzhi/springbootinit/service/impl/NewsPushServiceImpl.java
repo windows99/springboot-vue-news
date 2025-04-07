@@ -6,9 +6,11 @@ import com.guanzhi.springbootinit.mapper.UserMapper;
 import com.guanzhi.springbootinit.model.dto.news.NewsRecommendDTO;
 import com.guanzhi.springbootinit.model.entity.NewsPush;
 import com.guanzhi.springbootinit.model.entity.User;
+import com.guanzhi.springbootinit.model.vo.WebSocketMessage;
 import com.guanzhi.springbootinit.service.NewsRecommendService;
 import com.guanzhi.springbootinit.service.NewsPushService;
-import com.guanzhi.springbootinit.websocket.NewsWebSocketServer;
+import com.guanzhi.springbootinit.service.NewsWebSocketServer;
+//import com.guanzhi.springbootinit.model.entity.WebSocketMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +67,9 @@ public class NewsPushServiceImpl implements NewsPushService {
             for (int i = 0; i < Math.min(3, recommendNews.size()); i++) {
                 message.append("\n").append(i + 1).append(". ").append(recommendNews.get(i).getTitle());
             }
-            NewsWebSocketServer.sendInfo(message.toString(), userId.toString());
+            
+            WebSocketMessage wsMessage = WebSocketMessage.build(2, message.toString(), recommendNews);
+            NewsWebSocketServer.sendInfo(wsMessage, userId.toString());
         } catch (Exception e) {
             log.error("WebSocket推送失败: {}", e.getMessage());
         }

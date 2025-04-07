@@ -234,7 +234,7 @@ const fetchData = async (category, isLoadMore = false) => {
   try {
     let params = {
       pageSize: 10,
-      status: 1,
+      status: 3,
       category: category === 1 ? null : category,
       current: currentPage.value
     }

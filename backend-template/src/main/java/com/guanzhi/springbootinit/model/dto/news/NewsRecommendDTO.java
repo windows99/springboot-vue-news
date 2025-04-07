@@ -8,9 +8,10 @@ import java.util.Date;
 public class NewsRecommendDTO {
     private Long id;
     private String title;
-    private String coverImage;
+    private String coverimage;
+    private String content;
     private Long category;
     private String categoryName;
-    private Integer viewCount;
-    private Date createTime;
+    private Integer viewcount;
+    private Date createtime;
 } 

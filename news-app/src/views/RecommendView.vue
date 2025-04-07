@@ -1,6 +1,10 @@
 <template>
   <nav-bar />
   <el-container style="margin-top: 60px;" class="main-bg">
+
+    <!-- <el-affix :offset="60">
+      
+    </el-affix> -->
     <el-main style="padding: 0;">
       <el-row justify="center" class="news-container">
         <el-col :span="18" v-for="news in newsList" :key="news.id" class="news-item">
@@ -13,8 +17,9 @@
 
               <!-- 右侧内容 -->
               <el-col :span="20" class="news-content">
-                <el-text @click="viewDetail(news.id)" class="hover-title" line-clamp="1" size="large">{{ news.title
-                }}</el-text>
+                <el-text @click="viewDetail(news.id)" class="hover-title" line-clamp="1" size="large">
+                  {{ news.title }}
+                </el-text>
                 <br />
                 <el-text line-clamp="3" size="small">{{ htmlToText(news.content) }}</el-text>
                 <br />
@@ -39,22 +44,31 @@
 
     </el-main>
   </el-container>
+  <el-backtop :right="100" :bottom="100" />
   <FooterBar />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, onBeforeUnmount } from 'vue'
-import { getNewsListsUsingPost } from "@/api/newsController"
+import { onMounted, ref, computed, onBeforeUnmount, h } from 'vue'
+// import { getNewsListsUsingPost } from "@/api/newsController"
+
+import { getPersonalRecommendUsingGet, getRecommendForUserUsingGet, getHotNewsUsingGet } from "@/api/newsRecommendController"
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
+import { useUserStoreHook } from '../stores/modules/user'
+import { ElNotification, ElButton } from 'element-plus'
 
+const useUserStore = useUserStoreHook()
 const route = useRouter()
+
 
 const newsList = ref<Object[]>([])
 const currentPage = ref<Number>(1)
 const totalPages = ref<Number>(0)
 const loading = ref<Boolean>(false)
+
+
 const noMore = computed(() => {
   if (newsList.value.length === 0) return false
   return currentPage.value >= totalPages.value
@@ -69,18 +83,22 @@ const fetchData = async (category, isLoadMore = false) => {
     let params = {
       current: currentPage.value,
       pageSize: 10,
-      status: 1,
-      category: category === 1 ? null : category
     }
-
-    const res = await getNewsListsUsingPost(params)
+    let res = null
+    if (useUserStore.user.id) {
+      //  用户登录，返回该用户个性推荐新闻
+      res = await getRecommendForUserUsingGet({ ...params, userId: useUserStore.user.id })
+    } else {
+      // 未登录，返回热门新闻
+      res = await getHotNewsUsingGet(params)
+    }
     if (res.code == 0) {
       if (isLoadMore) {
         newsList.value.push(...res.data.records)
       } else {
         newsList.value = res.data.records
       }
-      totalPages.value = res.data.pages
+      totalPages.value = res.data.size
     }
   } finally {
     loading.value = false
@@ -124,13 +142,62 @@ const handleScroll = () => {
   }
 }
 
+const websocket = ref<WebSocket | null>(null)
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
   fetchData(1)
+
+  // 建立WebSocket连接
+  if (useUserStore.user.id) {
+    const wsUrl = `ws://localhost:8101/api/websocket/news/${useUserStore.user.id}`
+    websocket.value = new WebSocket(wsUrl)
+
+    websocket.value.onmessage = (event) => {
+
+      const newNews = JSON.parse(event.data)
+      if (newNews.type === 2) {
+        const checked = ref<boolean | string | number>(false)
+        const notification = ElNotification({
+          title: '您有新的推送，是否加载？',
+          offset: 60,
+          // Should pass a function if VNode contains dynamic props
+          message: () =>
+            [h(ElButton, {
+              type: 'primary',
+              onClick: (e) => {
+                // 将新新闻添加到列表最前面
+                newsList.value.unshift(...newNews.data)
+                notification.close()
+              }
+            },
+              '加载'
+            ), h(ElButton, {
+              type: 'danger',
+              onClick: (e) => {
+                // 将新新闻添加到列表最前面
+                notification.close()
+              }
+            },
+              '取消'
+            )]
+
+        })
+      }
+    }
+
+    websocket.value.onerror = (error) => {
+      console.error('WebSocket error:', error)
+    }
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
+  // 关闭WebSocket连接
+  if (websocket.value) {
+    websocket.value.close()
+  }
 })
 </script>
 

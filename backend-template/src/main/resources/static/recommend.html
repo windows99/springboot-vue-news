@@ -220,43 +220,67 @@
             // 连接打开时触发
             socket.onopen = function(event) {
                 document.getElementById('ws-status').innerHTML = `WebSocket状态: 已连接 (用户ID: ${userId})`;
-                socket.send("Hello Server!");
-                addMessage("WebSocket连接已建立");
+                addMessage("系统消息", "WebSocket连接已建立");
             };
             
             // 收到消息时触发
             socket.onmessage = function(event) {
-                addMessage(event.data);
-                console.log("收到消息:", event.data);
+                try {
+                    const message = JSON.parse(event.data);
+                    let messageType = "未知消息";
+                    switch(message.type) {
+                        case 1:
+                            messageType = "系统消息";
+                            break;
+                        case 2:
+                            messageType = "新闻推送";
+                            break;
+                        case 3:
+                            messageType = "用户消息";
+                            break;
+                    }
+                    addMessage(messageType, message.content, message.data);
+                    console.log("收到消息:", message);
+                } catch (e) {
+                    addMessage("系统消息", event.data);
+                    console.log("收到原始消息:", event.data);
+                }
             };
             
             // 连接关闭时触发
             socket.onclose = function(event) {
                 document.getElementById('ws-status').innerHTML = `WebSocket状态: 已断开`;
-                addMessage("WebSocket连接已关闭");
+                addMessage("系统消息", "WebSocket连接已关闭");
                 console.log("WebSocket已关闭");
             };
             
             // 发生错误时触发
             socket.onerror = function(error) {
                 document.getElementById('ws-status').innerHTML = `WebSocket状态: 连接错误`;
-                addMessage("WebSocket连接错误");
+                addMessage("系统消息", "WebSocket连接错误");
                 console.error("WebSocket错误:", error);
             };
         }
         
-        function addMessage(message) {
+        function addMessage(type, content, data = null) {
             const container = document.getElementById('message-container');
             const now = new Date();
             const timeStr = now.toLocaleTimeString();
             
             const messageElement = document.createElement('div');
             messageElement.className = 'message';
-            messageElement.innerHTML = `
-                <div>${message}</div>
-                <div class="message-time">${timeStr}</div>
+            
+            let messageContent = `
+                <div><strong>${type}:</strong> ${content}</div>
             `;
             
+            if (data) {
+                messageContent += `<div class="message-data">${JSON.stringify(data)}</div>`;
+            }
+            
+            messageContent += `<div class="message-time">${timeStr}</div>`;
+            
+            messageElement.innerHTML = messageContent;
             container.appendChild(messageElement);
             container.scrollTop = container.scrollHeight;
         }

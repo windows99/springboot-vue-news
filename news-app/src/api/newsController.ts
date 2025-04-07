@@ -91,6 +91,22 @@ export async function publishNewsUsingPut(
   });
 }
 
+/** setStatusNews PUT /api/news/setStatus/${param0} */
+export async function setStatusNewsUsingPut(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.setStatusNewsUsingPUTParams,
+  options?: { [key: string]: any }
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.BaseResponseString_>(`/api/news/setStatus/${param0}`, {
+    method: "PUT",
+    params: {
+      ...queryParams
+    },
+    ...(options || {})
+  });
+}
+
 /** shelfNews PUT /api/news/shelf/${param0} */
 export async function shelfNewsUsingPut(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
