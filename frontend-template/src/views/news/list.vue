@@ -67,12 +67,12 @@
 
         <el-table-column label="操作" width="300">
           <template #default="{ row }">
-            <el-button-group v-for="btn in btnList" :key="btn.title">
+            <!-- <el-button-group v-for="btn in btnList" :key="btn.title">
               <el-button v-if="btn.showBtn(row)" :type="btn.type" size="small" @click="btn.fn(row)">
                 {{ btn.title }}
               </el-button>
-            </el-button-group>
-
+            </el-button-group> -->
+            <action-buttons :row="row" :current-role="currentRole" />
           </template>
         </el-table-column>
       </el-table>
@@ -86,16 +86,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, pushScopeId } from 'vue'
+import { ref, onMounted, watch, pushScopeId, h } from 'vue'
 import { useRouter } from 'vue-router'
-
-interface ButtonItem {
-  title: string
-  type: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'text'
-  fn: (row: any) => void
-  roles: string[]
-  showBtn?: (row) => Boolean
-}
 import {
   getNewsListsUsingPost,
   deleteNewsUsingDelete,
@@ -104,10 +96,10 @@ import {
 } from '@/api/newsController'
 import { ElInput, ElMessage, ElMessageBox, ElTag, ElBacktop } from "element-plus";
 import { useNewsStore } from "@/store/modules/news"
-import { Auth } from "@/components/ReAuth";
+import { ElButton } from "element-plus";
+import { useUserStoreHook } from '@/store/modules/user'
 
 
-console.log(Auth)
 
 const newsTagList = useNewsStore().newsTagList
 const newsStatusList = useNewsStore().newsStatusList
@@ -132,52 +124,194 @@ const queryRequest = ref({
   endTime: undefined
 })
 
-const btnList = ref<Array<ButtonItem>>([
-  {
-    title: "查看",
-    type: "primary",
-    fn: (row) => handleView(row.id),
-    roles: ["admin", "editor", "guest"],
-    showBtn: (row) => true
+
+
+// 使用用户store
+const useUserStore = useUserStoreHook()
+const currentRole = ref(useUserStore.roles.toString())
+const statusConfig = {
+  0: { label: '草稿', type: 'info' },
+  1: { label: '待审核', type: 'warning' },
+  2: { label: '审核通过', type: 'success' },
+  3: { label: '已发布', type: '' },
+  4: { label: '审核失败', type: 'danger' },
+  5: { label: '已下架', type: 'info' },
+  6: { label: '反馈待审', type: 'warning' }
+}
+const permissionMatrix = {
+  view: ['admin', 'editor', 'manage'],
+  edit: ['admin', 'editor', 'manage'],
+  delete: ['admin'],
+  submit: ['admin', 'editor'],
+  recall: ['admin', 'editor'],
+  audit_pass: ['admin', 'manage'],
+  audit_reject: ['admin', 'manage'],
+  publish: ['admin', 'manage'],
+  offline: ['admin', 'manage'],
+  republish: ['admin']
+}
+
+
+// 权限检查方法
+
+// 按钮配置（完整版）
+const actionConfig = [
+  { // 编辑/修改
+    label: '查看',
+    action: 'view',
+    states: [0, 1, 2, 3, 4, 5, 6], // 草稿、审核失败
+    type: 'primary',
+    visible: (row) => checkPermission('edit')
   },
-  {
-    title: "编辑",
-    type: "warning",
-    fn: (row) => handleEdit(row.id),
-    roles: ["admin", "editor"],
-    // showBtn: (row) => [1, 2, 3].includes(row.status)
-    showBtn: (row) => row.status == 0
+  { // 编辑/修改
+    label: (row) => row.status === 4 ? '修改' : '编辑',
+    action: 'edit',
+    states: [0, 4], // 草稿、审核失败
+    type: 'primary',
+    icon: 'Edit',
+    visible: (row) => checkPermission('edit')
   },
-  {
-    title: "提交",
-    type: "success",
-    fn: (row) => handleSubmit(row.id),
-    roles: ["admin", "editor"],
-    // showBtn: (row) => [1, 2, 3].includes(row.status)
-    showBtn: (row) => row.status == (0 || 4)
+  { // 删除
+    label: '删除',
+    action: 'delete',
+    states: [0, 1, 4, 5, 6], // 可删除状态
+    type: 'danger',
+    icon: 'Delete',
+    visible: () => checkPermission('delete')
   },
-  // {
-  //   title: "发布",
-  //   type: "success",
-  //   fn: (row) => handlePublish(row),
-  //   roles: ["admin", "editor"],
-  //   showBtn: (row) => row.status == 2
+  { // 提交/重新提交
+    label: (row) => row.status === 4 ? '重新提交' : '提交审核',
+    action: 'submit',
+    states: [0, 4],
+    type: 'success',
+    icon: 'Upload',
+    visible: () => checkPermission('submit')
+  },
+  // { // 撤回
+  //   label: '撤回',
+  //   action: 'recall',
+  //   states: [1, 6],
+  //   type: 'warning',
+  //   icon: 'RefreshLeft',
+  //   visible: () => checkPermission('recall')
   // },
-  {
-    title: "下架",
-    type: "info",
-    fn: (row) => handleUnpublish(row),
-    roles: ["admin", "editor"],
-    showBtn: (row) => row.status == 3
+  // { // 审核通过
+  //   label: '通过',
+  //   action: 'audit_pass',
+  //   states: [1, 6],
+  //   type: 'success',
+  //   icon: 'CircleCheck',
+  //   visible: () => checkPermission('audit_pass')
+  // },
+  // { // 审核驳回
+  //   label: '驳回',
+  //   action: 'audit_reject',
+  //   states: [1, 6],
+  //   type: 'danger',
+  //   icon: 'CloseBold',
+  //   visible: () => checkPermission('audit_reject')
+  // },
+  { // 发布
+    label: '发布',
+    action: 'publish',
+    states: [2],
+    type: 'success',
+    icon: 'Promotion',
+    visible: () => checkPermission('publish')
   },
-  {
-    title: "删除",
-    type: "danger",
-    fn: (row) => handleDelete(row.id),
-    roles: ["admin"],
-    showBtn: () => true
+  { // 下架
+    label: '下架',
+    action: 'offline',
+    states: [3],
+    type: 'warning',
+    icon: 'Remove',
+    visible: () => checkPermission('offline')
+  },
+  { // 重新发布
+    label: '重新发布',
+    action: 'republish',
+    states: [5],
+    type: 'success',
+    icon: 'Refresh',
+    visible: () => checkPermission('republish')
   }
-])
+]
+// 权限检查
+const checkPermission = (action) => {
+  return permissionMatrix[action]?.includes(currentRole.value)
+}
+
+// 操作处理器
+const handlers = {
+  view: (row) => handleView(row.id),
+  edit: (row) => handleEdit(row.id),
+  delete: (row) => handleDelete(row.id),
+  submit: (row) => handleSubmit(row.id),
+  // recall: (row) => updateStatus(row, 0, '已撤回为草稿'),
+  // audit_pass: (row) => {
+  //   const newStatus = row.status === 6 ? 3 : 2 // 反馈新闻直接发布
+  //   updateStatus(row, newStatus, '审核通过')
+  // },
+  // audit_reject: (row) => updateStatus(row, 4, '已驳回修改'),
+  publish: (row) => handlePublish(row),
+  offline: (row) => handleUnpublish(row),
+  republish: (row) => handlePublish(row)
+}
+
+// 统一状态更新
+const updateStatus = (row, newStatus, message) => {
+  ElMessage.success(`${message}，新状态：${statusConfig[newStatus].label}`)
+  row.status = newStatus
+}
+
+// 删除二次确认
+// const handleDelete = (row) => {
+//   ElMessageBox.confirm(`确认删除 "${row.title}"？`, '警告', {
+//     confirmButtonText: '确认删除',
+//     cancelButtonText: '取消',
+//     type: 'warning',
+//     distinguishCancelAndClose: true
+//   }).then(() => {
+//     tableData.value = tableData.value.filter(item => item.id !== row.id)
+//     ElMessage.success('删除成功')
+//   })
+// }
+
+// 编辑处理
+// const handleEdit = (row) => {
+//   ElMessageBox.prompt('请输入新标题', '编辑新闻', {
+//     confirmButtonText: '保存',
+//     cancelButtonText: '取消',
+//     inputValue: row.title,
+//     inputPattern: /^.{5,50}$/,
+//     inputErrorMessage: '标题需5-50个字符'
+//   }).then(({ value }) => {
+//     row.title = value
+//     ElMessage.success('修改成功')
+//   })
+// }
+
+// 动态按钮组件
+const ActionButtons = ({ row }) => {
+  const validActions = actionConfig.filter(btn => {
+    return btn.states.includes(row.status) &&
+      typeof btn.visible === 'function' &&
+      btn.visible(row)
+  })
+
+  if (validActions.length === 0) {
+    return h(ElTag, { type: 'info' }, '无可用操作')
+  }
+
+  return validActions.map(btn => h(ElButton, {
+    key: btn.action,
+    type: btn.type,
+    size: 'small',
+    // icon: btn.icon,
+    onClick: () => handlers[btn.action](row),
+    // style: { marginRight: '8px' }
+  }, typeof btn.label === 'function' ? btn.label(row) : btn.label))
+}
 
 //  格式化分类
 const formatCategory = (row) => {
@@ -272,9 +406,9 @@ const handleEdit = (id: number) => {
 }
 
 const handleSubmit = async (id: number) => {
-  console.log(id)
   await setStatusNewsUsingPut({ "id": id, statusInt: 1 })
   ElMessage.success('提交成功')
+  fetchData();
 }
 
 const handleDelete = (id: number) => {

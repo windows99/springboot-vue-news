@@ -16,6 +16,8 @@ public class NewsPush {
     private Long id;
     
     private Long newsId;
+
+    private Long userId;
     
     private Date pushTime;
     
@@ -29,4 +31,4 @@ public class NewsPush {
     
     @TableLogic
     private Integer isDelete;
-} 
+}

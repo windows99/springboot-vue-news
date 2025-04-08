@@ -67,7 +67,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
-import { addSensitiveWordUsingPost, updateSensitiveWordUsingPut, getSensitiveWordUsingGet1, deleteSensitiveWordUsingDelete } from '@/api/sensitiveWordController'
+import { addSensitiveWordUsingPost, updateSensitiveWordUsingPut, getSensitiveWordUsingGet, deleteSensitiveWordUsingDelete } from '@/api/sensitiveWordController'
 
 interface SensitiveWord {
   id: number
@@ -101,7 +101,7 @@ const formatTime = (time: string) => {
 const fetchData = async () => {
   try {
 
-    const res = await getSensitiveWordUsingGet1()
+    const res = await getSensitiveWordUsingGet()
     console.log(res)
     tableData.value = res.data
     // total.value = res.data

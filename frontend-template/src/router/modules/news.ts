@@ -6,7 +6,7 @@ export default {
   meta: {
     title: "新闻管理",
     icon: "memo",
-    roles: ["admin", "editor"],
+    roles: ["admin", "editor", "manage"],
     keepAlive: true
   },
   children: [
@@ -27,6 +27,7 @@ export default {
       component: () => import("@/views/news/create.vue"),
       meta: {
         title: "创建新闻",
+        roles: ["admin", "editor",],
         hiddenTag: true,
         keepAlive: true,
       }
@@ -67,7 +68,7 @@ export default {
       component: () => import('@/views/news/publish.vue'),
       meta: {
         title: '新闻发布',
-        roles: ["admin", "manage"],
+        roles: ["admin", "editor"],
         keepAlive: true
       }
     }

@@ -4,6 +4,7 @@ export default {
   meta: {
     icon: "informationLine",
     title: "异常页面",
+    roles: ["admin"],
     // showLink: false,
     rank: 9
   },
