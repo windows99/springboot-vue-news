@@ -12,7 +12,7 @@ public interface NewsTagService extends IService<NewsTag> {
 
     boolean addTag(NewsTag newsTag);
 
-    boolean deleteTagById(Long tagId);
+    String deleteTagById(Long tagId);
 
     boolean updateTag(NewsTag newsTag);
 

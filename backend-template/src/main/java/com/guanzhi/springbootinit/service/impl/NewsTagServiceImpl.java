@@ -42,30 +42,26 @@ public class NewsTagServiceImpl extends ServiceImpl<NewsTagMapper, NewsTag> impl
     }
 
     @Override
-    public boolean deleteTagById(Long tagId) {
+    public String deleteTagById(Long tagId) {
         try {
             int result = newTagMapper.deleteById(tagId);
             if (result == 0) {
-                throw new RuntimeException("Failed to delete news tag with id: " + tagId);
+                return "标签不存在，删除失败";
             }
+            return "删除标签成功";
         } catch (Exception e) {
-            log.error("Delete news tag error: ", e);
-            throw new RuntimeException(e);
+            // 检查是否是外键约束错误
+            if (e.getMessage() != null && (e.getMessage().contains("foreign key constraint") || 
+                                          e.getMessage().toLowerCase().contains("constraint") ||
+                                          e.getMessage().toLowerCase().contains("违反了") ||
+                                          e.getMessage().toLowerCase().contains("引用"))) {
+                log.warn("无法删除标签，该标签已被新闻引用: {}", tagId);
+                return "无法删除标签，该标签已被新闻引用";
+            }
+            log.error("删除标签出错: ", e);
+            return "删除标签出现系统错误：" + e.getMessage();
         }
-        return false;
     }
-
-//    private boolean isTagInUse(Long tagId) {
-//        try {
-//            News news = new News();
-//            news.createCriteria().andTagIdsLike("%," + tagId + ",%");
-//            int count = newsMapper.countByExample(example);
-//            return count > 0;
-//        } catch (Exception e) {
-//            log.error("检查标签ID {} 是否在使用中失败", tagId, e);
-//            return true; // 默认视为被使用，防止误删
-//        }
-//    }
 
 
     @Override

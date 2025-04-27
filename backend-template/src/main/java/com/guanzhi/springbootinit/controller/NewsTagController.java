@@ -1,6 +1,7 @@
 package com.guanzhi.springbootinit.controller;
 
 import com.guanzhi.springbootinit.common.BaseResponse;
+import com.guanzhi.springbootinit.common.ErrorCode;
 import com.guanzhi.springbootinit.common.ResultUtils;
 import com.guanzhi.springbootinit.model.entity.NewsTag;
 import com.guanzhi.springbootinit.service.NewsTagService;
@@ -37,10 +38,14 @@ public class NewsTagController {
     @DeleteMapping("/{id}")
     public BaseResponse<?> deleteTag(@PathVariable Long id) {
         try {
-            boolean b = newsTagService.deleteTagById(id);
-            return ResultUtils.success(b);
+            String result = newsTagService.deleteTagById(id);
+            if (result.equals("删除标签成功")) {
+                return ResultUtils.success(result);
+            } else {
+                return ResultUtils.error(ErrorCode.OPERATION_ERROR, result);
+            }
         } catch (Exception e) {
-            return ResultUtils.error(500, "Failed to add tag");
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "系统错误：" + e.getMessage());
         }
     }
 
