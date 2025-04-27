@@ -4,7 +4,7 @@ import RecommendView from '../views/RecommendView.vue'
 import HotView from '../views/HotView.vue'
 import NewsDetailView from '../views/NewsDetailView.vue'
 // import ProfileView from '../views/ProfileView.vue'
-import ProfileView from '../views/my/myInfo.vue'
+import ProfileCenter from '../views/my/ProfileCenter.vue'
 import LoginView from '../views/login/index.vue'
 import ViewHistory from '../views/my/ViewHistory.vue'
 import MyComments from '../views/my/MyComments.vue'
@@ -38,7 +38,7 @@ const routes = [
   {
     path: '/profile',
     name: 'profile',
-    component: ProfileView
+    component: ProfileCenter
   },
   {
     path: '/login',

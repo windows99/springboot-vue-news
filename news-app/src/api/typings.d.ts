@@ -518,4 +518,25 @@ declare namespace API {
     userProfile?: string;
     userRole?: string;
   };
+
+  type getUserTagsUsingGETParams = {
+    /** 用户ID */
+    userId: number;
+  };
+
+  type UserTagUpdateRequest = {
+    /** 用户ID */
+    userId: number;
+    /** 标签ID列表 */
+    tagIds: number[];
+  };
+
+  type BaseResponseListInteger_ = {
+    /** 响应码 */
+    code?: number;
+    /** 响应数据 */
+    data?: number[];
+    /** 响应消息 */
+    message?: string;
+  };
 }
