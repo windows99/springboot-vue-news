@@ -1,11 +1,9 @@
-
-
 export default {
   path: "/news",
   redirect: "/news/list",
   meta: {
     title: "新闻管理",
-    icon: "memo",
+    icon: "files",
     roles: ["admin", "editor", "manage"],
     keepAlive: true
   },
@@ -30,16 +28,6 @@ export default {
         roles: ["admin", "editor",],
         hiddenTag: true,
         keepAlive: true,
-      }
-    },
-    {
-      path: "/news/import",
-      name: "NewsImport",
-      component: () => import("@/views/news/import.vue"),
-      meta: {
-        title: "导入新闻",
-        roles: ["admin"],
-        hiddenTag: true
       }
     },
     {

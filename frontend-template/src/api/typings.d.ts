@@ -158,7 +158,7 @@ declare namespace API {
 
   type deleteTagUsingDELETEParams = {
     /** id */
-    id: number;
+    id: string;
   };
 
   type deleteViewByIdUsingPOSTParams = {
@@ -366,7 +366,7 @@ declare namespace API {
 
   type updateTagUsingPUTParams = {
     /** id */
-    id: number;
+    id: string;
   };
 
   type uploadFileUsingPOSTParams = {

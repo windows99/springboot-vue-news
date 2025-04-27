@@ -39,7 +39,7 @@ export async function deleteCommentByIdUsingDelete(
 ) {
   const { id: param0, ...queryParams } = params;
   return request<API.BaseResponseBoolean_>(`/api/comment/${param0}`, {
-    method: "DELETE",
+    method: "DELETE" as "GET" | "POST",
     params: { ...queryParams },
     ...(options || {})
   });

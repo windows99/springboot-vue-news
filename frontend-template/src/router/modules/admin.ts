@@ -21,6 +21,15 @@ export default {
       meta: {
         title: "用户管理"
       }
+    },
+    {
+      path: "/admin/user/commentManage",
+      name: "CommentManage",
+      component: () => import("@/views/permission/user/commentManage.vue"),
+      meta: {
+        title: "评论管理",
+        roles: ["admin", "editor"]
+      }
     }
   ]
 } as RouteConfigsTable;

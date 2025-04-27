@@ -62,7 +62,7 @@ const fetchData = async () => {
     if (res.code === 0) {
       tagList.value = res.data
     } else {
-      message(res.message, { type: "error" });
+      ElMessage.error(res.message || '获取标签列表失败');
     }
   } finally {
     loading.value = false
@@ -71,18 +71,21 @@ const fetchData = async () => {
 
 
 const formData = ref({
-  id: 0,
+  id: '',
   tagname: ''
 })
 
 const handleCreate = async () => {
-  formData.value = {}
+  formData.value = {
+    id: '',
+    tagname: ''
+  }
   isEdit.value = false
   dialogVisible.value = true
 }
 
 const handleEdit = (row: any) => {
-  formData.value.id = BigInt(row.id).toString()
+  formData.value.id = row.id.toString()
   formData.value.tagname = row.tagname
   isEdit.value = true
   dialogVisible.value = true
@@ -95,14 +98,14 @@ const handleDelete = async (id: string) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const res = await deleteTagUsingDelete({ "id": +id })
+    const res = await deleteTagUsingDelete({ "id": id })
     console.log(res)
-    if (res.code !== 0) {
-      ElMessage.error('删除失败，该标签下有新闻，无法删除')
-      return
+    if (res.code === 0) {
+      ElMessage.success('删除成功')
+      fetchData()
+    } else {
+      ElMessage.error(res.message || '该标签绑定了数据，无法删除')
     }
-    ElMessage.success('删除成功')
-    fetchData()
   } catch (error) {
     // 取消删除不处理
   }

@@ -9,8 +9,16 @@ import HomeFilled from "@iconify-icons/ep/home-filled";
 import InformationLine from "@iconify-icons/ri/information-line";
 import Lollipop from "@iconify-icons/ep/lollipop";
 import Memo from "@iconify-icons/ep/memo";
+import DocumentAdd from "@iconify-icons/ep/document-add";
+import Bell from "@iconify-icons/ep/bell";
+import Files from "@iconify-icons/ep/files";
+import Setting from "@iconify-icons/ep/setting";
 
 addIcon("homeFilled", HomeFilled);
 addIcon("memo", Memo);
 addIcon("informationLine", InformationLine);
 addIcon("lollipop", Lollipop);
+addIcon("documentAdd", DocumentAdd);
+addIcon("bell", Bell);
+addIcon("files", Files);
+addIcon("setting", Setting);

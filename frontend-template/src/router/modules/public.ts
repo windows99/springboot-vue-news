@@ -1,11 +1,9 @@
-
-
 export default {
   path: "/public",
   redirect: "/public/tags",
   meta: {
     title: "公共配置",
-    icon: "memo",
+    icon: "setting",
     roles: ["admin"],
     keepAlive: true
   },
