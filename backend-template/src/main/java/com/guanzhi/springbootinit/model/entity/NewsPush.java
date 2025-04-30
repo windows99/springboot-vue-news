@@ -6,29 +6,72 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 新闻推送实体类
+ */
+@TableName(value = "news_push")
 @Data
-@TableName("news_push")
-public class NewsPush {
-    
-    @TableId(type = IdType.ASSIGN_ID)
+public class NewsPush implements Serializable {
+
+    /**
+     * 主键
+     */
+    @TableId(type = IdType.AUTO)
     private Long id;
-    
+
+    /**
+     * 用户ID
+     */
+    private Long userId;
+
+    /**
+     * 新闻ID
+     */
     private Long newsId;
 
-    private Long userId;
-    
+    /**
+     * 推送时间
+     */
     private Date pushTime;
-    
+
+    /**
+     * 推送类型: 1-即时推送 2-定时推送
+     */
     private Integer pushType;
-    
+
+    /**
+     * 推送状态: 0-待推送 1-已推送 2-推送失败
+     */
     private Integer status;
-    
+
+    /**
+     * 是否已读: 0-未读 1-已读
+     */
+    private Integer isRead;
+
+    /**
+     * 阅读时间
+     */
+    private Date readTime;
+
+    /**
+     * 创建时间
+     */
     private Date createTime;
-    
+
+    /**
+     * 更新时间
+     */
     private Date updateTime;
-    
+
+    /**
+     * 是否删除
+     */
     @TableLogic
     private Integer isDelete;
+
+    private static final long serialVersionUID = 1L;
 }

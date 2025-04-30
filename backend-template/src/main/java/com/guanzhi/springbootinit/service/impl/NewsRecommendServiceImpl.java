@@ -43,6 +43,14 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         countWrapper.eq(News::getStatus, 3).eq(News::getIsdelete, 0);  // 只统计状态为3的新闻总数
         long total = newsMapper.selectCount(countWrapper);
         
+        // 检查用户是否有浏览历史
+        boolean hasUserHistory = hasUserHistory(userId);
+        
+        // 如果用户无历史数据，混合推荐热门和最新内容
+        if (!hasUserHistory) {
+            return getMixedRecommendations(current, pageSize);
+        }
+        
         // 获取用户的兴趣标签
         List<String> userSubscriptions = getUserSubscriptions(userId);
         
@@ -51,6 +59,12 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         
         // 获取用户浏览过的新闻分类
         List<Long> userViewedCategories = getUserViewedCategories(userId);
+
+        // 获取相似用户喜欢的新闻（协同过滤部分）
+        List<Long> similarUserNewsIds = new ArrayList<>();
+        if (userViewedNewsIds.size() > 5) { // 只有当用户有足够的历史记录时才使用协同过滤
+            similarUserNewsIds = getSimilarUsersPreferredNewsIds(userId, 10);
+        }
         
         // 构建分页查询条件
         LambdaQueryWrapper<News> queryWrapper = new LambdaQueryWrapper<>();
@@ -59,13 +73,18 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
                    .orderByDesc(News::getCreatetime); // 按创建时间降序
         
         // 执行分页查询
-        Page<News> newsPage = newsMapper.selectPage(new Page<>(current, pageSize), queryWrapper);
+        Page<News> newsPage = newsMapper.selectPage(new Page<>(current, pageSize * 2), queryWrapper); // 获取更多候选项以便排序
         
         // 获取所有新闻
         List<News> allNews = newsPage.getRecords();
         
         // 根据用户兴趣和浏览历史对新闻进行排序
-        List<News> sortedNews = sortNewsByUserPreferences(allNews, userSubscriptions, userViewedCategories, userViewedNewsIds);
+        List<News> sortedNews = sortNewsByUserPreferences(allNews, userSubscriptions, userViewedCategories, userViewedNewsIds, similarUserNewsIds);
+        
+        // 限制结果数量
+        if (sortedNews.size() > pageSize) {
+            sortedNews = sortedNews.subList(0, (int)pageSize);
+        }
         
         // 转换为DTO
         Page<NewsRecommendDTO> dtoPage = new Page<>();
@@ -80,6 +99,87 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         dtoPage.setRecords(dtoList);
         
         return dtoPage;
+    }
+
+    /**
+     * 检查用户是否有浏览历史
+     */
+    private boolean hasUserHistory(Long userId) {
+        LambdaQueryWrapper<UserNewsView> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserNewsView::getUserId, userId);
+        return userNewsViewMapper.selectCount(queryWrapper) > 0;
+    }
+
+    /**
+     * 为新用户提供混合推荐（热门+最新）
+     */
+    private Page<NewsRecommendDTO> getMixedRecommendations(long current, long pageSize) {
+        // 获取一半热门新闻
+        int halfSize = (int) (pageSize / 2);
+        List<NewsRecommendDTO> hotNews = getHotNews(halfSize);
+        
+        // 获取一半最新新闻
+        LambdaQueryWrapper<News> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(News::getStatus, 3)
+                   .eq(News::getIsdelete, 0)
+                   .orderByDesc(News::getCreatetime)
+                   .last("LIMIT " + halfSize);
+        
+        List<News> latestNews = newsMapper.selectList(queryWrapper);
+        List<NewsRecommendDTO> latestNewsDTOs = latestNews.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        
+        // 合并结果
+        List<NewsRecommendDTO> mixedResults = new ArrayList<>();
+        mixedResults.addAll(hotNews);
+        // 过滤掉已经在热门列表中的新闻
+        Set<Long> hotNewsIds = hotNews.stream()
+                .map(NewsRecommendDTO::getId)
+                .collect(Collectors.toSet());
+        
+        latestNewsDTOs.stream()
+                .filter(dto -> !hotNewsIds.contains(dto.getId()))
+                .forEach(mixedResults::add);
+        
+        // 如果总数超过pageSize，截取前pageSize条
+        if (mixedResults.size() > pageSize) {
+            mixedResults = mixedResults.subList(0, (int)pageSize);
+        }
+        
+        // 构建返回结果
+        Page<NewsRecommendDTO> dtoPage = new Page<>();
+        dtoPage.setTotal(mixedResults.size());
+        dtoPage.setCurrent(current);
+        dtoPage.setSize(pageSize);
+        dtoPage.setRecords(mixedResults);
+        
+        return dtoPage;
+    }
+
+    /**
+     * 获取与当前用户相似的用户喜欢的新闻ID列表
+     */
+    private List<Long> getSimilarUsersPreferredNewsIds(Long userId, int limit) {
+        // 获取当前用户的分类偏好
+        List<Long> userCategories = getUserViewedCategories(userId);
+        
+        if (userCategories.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        // 找到浏览过相似分类的其他用户
+        List<Long> similarUserIds = userNewsViewMapper.findUsersBySimilarCategories(userCategories, userId, 10);
+        
+        if (similarUserIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        // 获取这些用户最近浏览的新闻，但当前用户未浏览过的
+        List<Long> viewedNewsIds = getUserViewedNewsIds(userId);
+        List<Long> recommendedNewsIds = userNewsViewMapper.getNewsViewedBySimilarUsers(similarUserIds, viewedNewsIds, limit);
+        
+        return recommendedNewsIds;
     }
 
     @Override
@@ -116,6 +216,14 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
 
     @Override
     public List<NewsRecommendDTO> getPersonalizedNews(Long userId, Integer limit) {
+        // 检查用户是否有浏览历史
+        boolean hasUserHistory = hasUserHistory(userId);
+        
+        // 如果用户无历史数据，返回热门新闻
+        if (!hasUserHistory) {
+            return getHotNews(limit);
+        }
+        
         // 获取用户的兴趣标签
         List<String> userSubscriptions = getUserSubscriptions(userId);
         
@@ -124,6 +232,12 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         
         // 获取用户浏览过的新闻分类
         List<Long> userViewedCategories = getUserViewedCategories(userId);
+        
+        // 获取相似用户喜欢的新闻
+        List<Long> similarUserNewsIds = new ArrayList<>();
+        if (userViewedNewsIds.size() > 5) {
+            similarUserNewsIds = getSimilarUsersPreferredNewsIds(userId, 10);
+        }
         
         // 构建查询条件
         LambdaQueryWrapper<News> queryWrapper = new LambdaQueryWrapper<>();
@@ -135,7 +249,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         List<News> allNews = newsMapper.selectList(queryWrapper);
         
         // 根据用户兴趣和浏览历史对新闻进行排序
-        List<News> sortedNews = sortNewsByUserPreferences(allNews, userSubscriptions, userViewedCategories, userViewedNewsIds);
+        List<News> sortedNews = sortNewsByUserPreferences(allNews, userSubscriptions, userViewedCategories, userViewedNewsIds, similarUserNewsIds);
         
         // 限制数量
         if (sortedNews.size() > limit) {
@@ -176,9 +290,18 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         
         // 设置分类名称
         if (news.getCategory() != null) {
-            // 这里可以根据需要查询分类名称
-            // 简化处理，直接使用分类ID作为名称
-            dto.setCategoryName("分类" + news.getCategory());
+            try {
+                // 查询真实的分类名称
+                NewsTag tag = newsTagMapper.selectById(news.getCategory());
+                if (tag != null) {
+                    dto.setCategoryName(tag.getTagname());
+                } else {
+                    dto.setCategoryName("未知分类");
+                }
+            } catch (Exception e) {
+                log.error("获取分类名称失败: {}", e.getMessage());
+                dto.setCategoryName("分类" + news.getCategory());
+            }
         }
         
         return dto;
@@ -188,88 +311,121 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
      * 获取用户的订阅分类
      */
     private List<String> getUserSubscriptions(Long userId) {
-        LambdaQueryWrapper<UserSubscription> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(UserSubscription::getUserId, userId)
-                   .eq(UserSubscription::getStatus, 1) // 1-订阅中
-                   .eq(UserSubscription::getIsDelete, 0);
-        
-        List<UserSubscription> subscriptions = userSubscriptionMapper.selectList(queryWrapper);
-        return subscriptions.stream()
-                .map(UserSubscription::getCategory)
-                .collect(Collectors.toList());
+        try {
+            LambdaQueryWrapper<UserSubscription> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(UserSubscription::getUserId, userId)
+                       .eq(UserSubscription::getStatus, 1) // 1-订阅中
+                       .eq(UserSubscription::getIsDelete, 0);
+            
+            List<UserSubscription> subscriptions = userSubscriptionMapper.selectList(queryWrapper);
+            return subscriptions.stream()
+                    .map(UserSubscription::getCategory)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取用户订阅信息失败: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
     
     /**
      * 获取用户浏览过的新闻ID列表
      */
     private List<Long> getUserViewedNewsIds(Long userId) {
-        LambdaQueryWrapper<UserNewsView> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(UserNewsView::getUserId, userId)
-                   .orderByDesc(UserNewsView::getViewTime);
-        
-        List<UserNewsView> views = userNewsViewMapper.selectList(queryWrapper);
-        return views.stream()
-                .map(UserNewsView::getNewsId)
-                .collect(Collectors.toList());
+        try {
+            LambdaQueryWrapper<UserNewsView> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(UserNewsView::getUserId, userId)
+                       .orderByDesc(UserNewsView::getViewTime);
+            
+            List<UserNewsView> views = userNewsViewMapper.selectList(queryWrapper);
+            return views.stream()
+                    .map(UserNewsView::getNewsId)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取用户浏览历史失败: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
     
     /**
      * 获取用户浏览过的新闻分类
      */
     private List<Long> getUserViewedCategories(Long userId) {
-        // 使用UserNewsViewMapper中的方法获取用户浏览的新闻类别
-        List<Map<String, Object>> categoryPreferences = userNewsViewMapper.getUserCategoryPreferences(userId);
-        
-        return categoryPreferences.stream()
-                .map(map -> {
-                    Object category = map.get("category");
-                    return category instanceof Number ? ((Number) category).longValue() : null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        try {
+            // 使用UserNewsViewMapper中的方法获取用户浏览的新闻类别
+            List<Map<String, Object>> categoryPreferences = userNewsViewMapper.getUserCategoryPreferences(userId);
+            
+            return categoryPreferences.stream()
+                    .map(map -> {
+                        Object category = map.get("category");
+                        return category instanceof Number ? ((Number) category).longValue() : null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取用户分类偏好失败: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
     
     /**
      * 根据用户兴趣和浏览历史对新闻进行排序
+     * 采用多维度的评分机制实现个性化排序
      */
-    private List<News> sortNewsByUserPreferences(List<News> newsList, List<String> userSubscriptions, 
-                                                List<Long> userViewedCategories, List<Long> userViewedNewsIds) {
+    private List<News> sortNewsByUserPreferences(List<News> newsList, 
+                                               List<String> userSubscriptions, 
+                                               List<Long> userViewedCategories, 
+                                               List<Long> userViewedNewsIds,
+                                               List<Long> similarUserNewsIds) {
         // 计算每条新闻的得分
         Map<News, Double> newsScores = new HashMap<>();
+        
+        // 获取当前时间用于计算时效性
+        long currentTimeMillis = System.currentTimeMillis();
         
         for (News news : newsList) {
             double score = 0.0;
             
-            // 1. 根据用户订阅分类计算得分
+            // 1. 订阅匹配度得分 - 用户明确订阅的分类权重最高
             if (userSubscriptions.contains(String.valueOf(news.getCategory()))) {
-                score += 3.0; // 用户订阅的分类，权重较高
+                score += 5.0; 
             }
             
-            // 2. 根据用户浏览历史计算得分
+            // 2. 浏览历史匹配度得分 - 用户曾经浏览过的分类权重较高
             if (userViewedCategories.contains(news.getCategory())) {
-                score += 2.0; // 用户浏览过的分类，权重中等
+                score += 3.0; 
             }
             
-            // 3. 排除用户已浏览过的新闻
+            // 3. 协同过滤得分 - 相似用户喜欢的新闻权重中等
+            if (similarUserNewsIds.contains(news.getId())) {
+                score += 2.5;
+            }
+            
+            // 4. 内容流行度得分 - 流行内容一般较有价值
+            score += Math.log10(news.getViewcount() + 1) * 0.5; // 使用对数函数平滑化，避免高流行度项目过度主导
+            score += Math.log10(news.getLikecount() + 1) * 0.8; // 点赞比浏览更能表达质量
+            score += Math.log10(news.getCommentcount() + 1) * 0.6; // 评论互动也是重要指标
+            
+            // 5. 时效性得分 - 新鲜内容权重较高
+            if (news.getCreatetime() != null) {
+                long newsAgeMillis = currentTimeMillis - news.getCreatetime().getTime();
+                double daysOld = newsAgeMillis / (1000.0 * 60 * 60 * 24);
+                // 新闻越新，得分越高，呈指数衰减
+                score += Math.max(0, 3.0 * Math.exp(-0.1 * daysOld)); // 30天后时效性得分接近0
+            }
+            
+            // 6. 去重处理 - 已浏览过的内容显著降低权重
             if (userViewedNewsIds.contains(news.getId())) {
-                score -= 5.0; // 用户已浏览过的新闻，大幅降低权重
+                score *= 0.2; // 降低80%的权重，但不完全排除
             }
             
-            // 4. 根据新闻浏览量计算得分
-            score += Math.log1p(news.getViewcount()) * 0.5; // 使用对数函数平滑浏览量影响
-            
-            // 5. 根据新闻创建时间计算得分（越新的新闻得分越高）
-            long now = System.currentTimeMillis();
-            long newsTime = news.getCreatetime().getTime();
-            long diffHours = (now - newsTime) / (1000 * 60 * 60);
-            score += Math.max(0, 24 - diffHours) * 0.1; // 24小时内的新闻获得额外加分
-            
+            // 存储最终得分
             newsScores.put(news, score);
         }
         
-        // 根据得分对新闻进行排序
+        // 根据得分对新闻进行排序（从高到低）
         return newsList.stream()
-                .sorted((n1, n2) -> Double.compare(newsScores.getOrDefault(n2, 0.0), newsScores.getOrDefault(n1, 0.0)))
+                .sorted((n1, n2) -> Double.compare(newsScores.getOrDefault(n2, 0.0), 
+                                                  newsScores.getOrDefault(n1, 0.0)))
                 .collect(Collectors.toList());
     }
 } 

@@ -4,6 +4,11 @@ declare namespace API {
     word?: string;
   };
 
+  type addSubscriptionUsingPOSTParams = {
+    /** category */
+    category: string;
+  };
+
   type BaseResponseBoolean_ = {
     code?: number;
     data?: boolean;
@@ -13,6 +18,12 @@ declare namespace API {
   type BaseResponseComment_ = {
     code?: number;
     data?: Comment;
+    message?: string;
+  };
+
+  type BaseResponseInt_ = {
+    code?: number;
+    data?: number;
     message?: string;
   };
 
@@ -28,9 +39,15 @@ declare namespace API {
     message?: string;
   };
 
-  type BaseResponseListNewsRecommendDTO_ = {
+  type BaseResponseListNewsPushConfigDTO_ = {
     code?: number;
-    data?: NewsRecommendDTO[];
+    data?: NewsPushConfigDTO[];
+    message?: string;
+  };
+
+  type BaseResponseListNewsPushDTO_ = {
+    code?: number;
+    data?: NewsPushDTO[];
     message?: string;
   };
 
@@ -43,6 +60,12 @@ declare namespace API {
   type BaseResponseListSensitiveWord_ = {
     code?: number;
     data?: SensitiveWord[];
+    message?: string;
+  };
+
+  type BaseResponseListString_ = {
+    code?: number;
+    data?: string[];
     message?: string;
   };
 
@@ -88,6 +111,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponsePageNewsRecommendDTO_ = {
+    code?: number;
+    data?: PageNewsRecommendDTO_;
+    message?: string;
+  };
+
   type BaseResponsePageUser_ = {
     code?: number;
     data?: PageUser_;
@@ -118,6 +147,11 @@ declare namespace API {
     message?: string;
   };
 
+  type cancelSubscriptionUsingPOSTParams = {
+    /** category */
+    category: string;
+  };
+
   type Comment = {
     content?: string;
     createTime?: string;
@@ -139,6 +173,11 @@ declare namespace API {
   };
 
   type deleteCommentByIdUsingDELETEParams = {
+    /** id */
+    id: number;
+  };
+
+  type deleteConfigUsingDELETEParams = {
     /** id */
     id: number;
   };
@@ -191,8 +230,10 @@ declare namespace API {
   };
 
   type getHotNewsUsingGETParams = {
-    /** limit */
-    limit?: number;
+    /** current */
+    current?: number;
+    /** pageSize */
+    pageSize?: number;
   };
 
   type getJisunewsUsingGETParams = {
@@ -208,8 +249,10 @@ declare namespace API {
   };
 
   type getRecommendForUserUsingGETParams = {
-    /** limit */
-    limit?: number;
+    /** current */
+    current?: number;
+    /** pageSize */
+    pageSize?: number;
     /** userId */
     userId: number;
   };
@@ -231,6 +274,13 @@ declare namespace API {
     id?: number;
   };
 
+  type getUserPushHistoryUsingGETParams = {
+    /** limit */
+    limit?: number;
+    /** userId */
+    userId: number;
+  };
+
   type getUserVOByIdUsingGETParams = {
     /** id */
     id?: number;
@@ -243,6 +293,11 @@ declare namespace API {
     userId: number;
   };
 
+  type isSubscribedUsingGETParams = {
+    /** category */
+    category: string;
+  };
+
   type LoginUserVO = {
     createTime?: string;
     email?: string;
@@ -253,6 +308,11 @@ declare namespace API {
     userName?: string;
     userProfile?: string;
     userRole?: string;
+  };
+
+  type markPushAsReadUsingPOSTParams = {
+    /** pushId */
+    pushId: number;
   };
 
   type News = {
@@ -274,6 +334,39 @@ declare namespace API {
     viewcount?: number;
   };
 
+  type NewsPushConfigDTO = {
+    contentTemplate?: string;
+    createTime?: string;
+    id?: number;
+    newsId?: number;
+    newsTitle?: string;
+    nextPushTime?: string;
+    pushName?: string;
+    pushTargets?: string;
+    pushTimeExpression?: string;
+    pushType?: number;
+    status?: number;
+    updateTime?: string;
+    userId?: number;
+    userName?: string;
+  };
+
+  type NewsPushDTO = {
+    configId?: number;
+    createTime?: string;
+    id?: number;
+    isRead?: number;
+    newsCoverImage?: string;
+    newsId?: number;
+    newsTitle?: string;
+    pushTime?: string;
+    pushType?: number;
+    readTime?: string;
+    status?: number;
+    userId?: number;
+    userName?: string;
+  };
+
   type NewsQueryRequest = {
     author?: string;
     category?: number;
@@ -289,11 +382,12 @@ declare namespace API {
   type NewsRecommendDTO = {
     category?: number;
     categoryName?: string;
-    coverImage?: string;
-    createTime?: string;
+    content?: string;
+    coverimage?: string;
+    createtime?: string;
     id?: number;
     title?: string;
-    viewCount?: number;
+    viewcount?: number;
   };
 
   type NewsTag = {
@@ -317,6 +411,19 @@ declare namespace API {
     orders?: OrderItem[];
     pages?: number;
     records?: News[];
+    searchCount?: boolean;
+    size?: number;
+    total?: number;
+  };
+
+  type PageNewsRecommendDTO_ = {
+    countId?: string;
+    current?: number;
+    maxLimit?: number;
+    optimizeCountSql?: boolean;
+    orders?: OrderItem[];
+    pages?: number;
+    records?: NewsRecommendDTO[];
     searchCount?: boolean;
     size?: number;
     total?: number;
@@ -353,9 +460,31 @@ declare namespace API {
     id: number;
   };
 
+  type pushMultipleNewsToUserUsingPOSTParams = {
+    /** userId */
+    userId: number;
+  };
+
+  type pushNewsToUserUsingPOSTParams = {
+    /** userId */
+    userId: number;
+  };
+
   type pushNewsUsingPOSTParams = {
     /** userId */
     userId?: number;
+  };
+
+  type pushSpecificNewsToAllUsingPOSTParams = {
+    /** newsId */
+    newsId: number;
+  };
+
+  type pushSpecificNewsUsingPOSTParams = {
+    /** newsId */
+    newsId: number;
+    /** userId */
+    userId: number;
   };
 
   type recordViewUsingPOSTParams = {
@@ -363,6 +492,18 @@ declare namespace API {
     newsId: number;
     /** newsTitle */
     newsTitle: string;
+    /** userId */
+    userId: number;
+  };
+
+  type schedulePushToAllUsersUsingPOSTParams = {
+    /** pushTime */
+    pushTime: string;
+  };
+
+  type schedulePushToUserUsingPOSTParams = {
+    /** pushTime */
+    pushTime: string;
     /** userId */
     userId: number;
   };
@@ -392,6 +533,13 @@ declare namespace API {
     message: string;
     /** userId */
     userId: string;
+  };
+
+  type updateConfigStatusUsingPOSTParams = {
+    /** enabled */
+    enabled: boolean;
+    /** id */
+    id: number;
   };
 
   type updateNewsUsingPUTParams = {
@@ -517,26 +665,5 @@ declare namespace API {
     userName?: string;
     userProfile?: string;
     userRole?: string;
-  };
-
-  type getUserTagsUsingGETParams = {
-    /** 用户ID */
-    userId: number;
-  };
-
-  type UserTagUpdateRequest = {
-    /** 用户ID */
-    userId: number;
-    /** 标签ID列表 */
-    tagIds: number[];
-  };
-
-  type BaseResponseListInteger_ = {
-    /** 响应码 */
-    code?: number;
-    /** 响应数据 */
-    data?: number[];
-    /** 响应消息 */
-    message?: string;
   };
 }

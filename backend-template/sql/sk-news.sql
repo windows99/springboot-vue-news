@@ -72,17 +72,23 @@ CREATE TABLE `news`  (
 -- Table structure for news_push
 -- ----------------------------
 DROP TABLE IF EXISTS `news_push`;
-CREATE TABLE `news_push`  (
+CREATE TABLE `news_push` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `newsId` bigint(20) NOT NULL COMMENT '新闻id',
+  `userId` bigint(20) NOT NULL COMMENT '用户ID',
+  `newsId` bigint(20) NOT NULL COMMENT '新闻ID',
   `pushTime` datetime NOT NULL COMMENT '推送时间',
-  `pushType` tinyint(4) NOT NULL COMMENT '推送类型 1-即时 2-定时',
-  `status` tinyint(4) NOT NULL DEFAULT 0 COMMENT '状态 0-待推送 1-已推送',
+  `pushType` tinyint(4) NOT NULL COMMENT '推送类型 1-即时推送 2-定时推送',
+  `status` tinyint(4) NOT NULL DEFAULT 0 COMMENT '推送状态 0-待推送 1-已推送 2-推送失败',
+  `isRead` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否已读 0-未读 1-已读',
+  `readTime` datetime NULL DEFAULT NULL COMMENT '阅读时间',
   `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_userId`(`userId`) USING BTREE,
   INDEX `idx_newsId`(`newsId`) USING BTREE,
+  INDEX `idx_pushTime`(`pushTime`) USING BTREE,
+  CONSTRAINT `fk_news_push_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_news_push_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送记录' ROW_FORMAT = DYNAMIC;
 
@@ -186,5 +192,31 @@ CREATE TABLE `user_subscription`  (
   INDEX `idx_category`(`category`) USING BTREE,
   CONSTRAINT `fk_user_subscription_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户订阅' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for news_push_config
+-- ----------------------------
+DROP TABLE IF EXISTS `news_push_config`;
+CREATE TABLE `news_push_config` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `userId` bigint(20) NOT NULL COMMENT '用户ID',
+  `newsId` bigint(20) NULL DEFAULT NULL COMMENT '新闻ID',
+  `pushName` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送名称',
+  `pushType` tinyint(4) NOT NULL COMMENT '推送类型（0-按间隔时间推送，1-按固定时间推送）',
+  `pushTimeExpression` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '推送时间表达式',
+  `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '推送状态（0-暂停，1-激活）',
+  `nextPushTime` datetime NULL DEFAULT NULL COMMENT '下次推送时间',
+  `lastExecuteTime` datetime NULL DEFAULT NULL COMMENT '最后执行时间',
+  `pushTargets` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送目标',
+  `contentTemplate` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '推送内容模板',
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_userId`(`userId`) USING BTREE,
+  INDEX `idx_newsId`(`newsId`) USING BTREE,
+  CONSTRAINT `fk_news_push_config_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_news_push_config_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送配置' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -55,11 +55,11 @@ const goToProfile = () => {
   route.push('/profile')
 }
 const goToHistory = () => {
-  route.push('/view-history')
+  route.push({ path: '/profile', query: { tab: 'history' } })
 }
 
 const goToComments = () => {
-  route.push('/comments')
+  route.push({ path: '/profile', query: { tab: 'comments' } })
 }
 
 

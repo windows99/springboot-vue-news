@@ -235,8 +235,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   User, 
@@ -261,7 +261,7 @@ import {
 import { message } from '@/utils/message'
 import { setToken } from '@/utils/auth'
 import { getTagListUsingGet } from '@/api/newsTagController'
-import { getUserTagsUsingGet, updateUserTagsUsingPost } from '@/api/userTagController'
+import { getUserSubscriptionsUsingGet, cancelSubscriptionUsingPost } from '@/api/userSubscriptionController'
 
 defineOptions({
   name: 'ProfileCenter'
@@ -269,6 +269,7 @@ defineOptions({
 
 const router = useRouter()
 const userStore = useUserStore()
+const route = useRoute()
 
 // 当前登录用户
 const user = ref<API.User>({})
@@ -285,6 +286,13 @@ const handleMenuSelect = (index: string) => {
     fetchUserTags()
   }
 }
+
+// 监听路由参数变化
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && ['info', 'comments', 'history', 'tags'].includes(newTab)) {
+    activeMenu.value = newTab
+  }
+}, { immediate: true })
 
 // 获取当前登录用户信息
 const getCurrentUser = () => {
@@ -461,7 +469,7 @@ const fetchUserTags = async () => {
       availableTags.value = tagsRes.data
       
       // 获取用户标签
-      const userTagsRes = await getUserTagsUsingGet({ userId: user.value.id as number })
+      const userTagsRes = await getUserSubscriptionsUsingGet({ userId: user.value.id as number })
       if (userTagsRes.data) {
         userTags.value = userTagsRes.data
       } else {
@@ -499,7 +507,7 @@ const toggleTag = (tagId: number) => {
 const saveUserTags = async () => {
   try {
     // 调用更新用户标签接口
-    const res = await updateUserTagsUsingPost({
+    const res = await cancelSubscriptionUsingPost({
       userId: user.value.id as number,
       tagIds: userTags.value
     })

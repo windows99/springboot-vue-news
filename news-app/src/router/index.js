@@ -6,8 +6,6 @@ import NewsDetailView from '../views/NewsDetailView.vue'
 // import ProfileView from '../views/ProfileView.vue'
 import ProfileCenter from '../views/my/ProfileCenter.vue'
 import LoginView from '../views/login/index.vue'
-import ViewHistory from '../views/my/ViewHistory.vue'
-import MyComments from '../views/my/MyComments.vue'
 
 const routes = [
   {
@@ -17,7 +15,6 @@ const routes = [
     meta: {
       keepAlive: true
     }
-
   },
   {
     path: '/recommend',
@@ -33,28 +30,20 @@ const routes = [
     path: '/news/:id',
     name: 'news-detail',
     component: NewsDetailView
-
   },
   {
     path: '/profile',
     name: 'profile',
-    component: ProfileCenter
+    component: ProfileCenter,
+    meta: {
+      keepAlive: true
+    }
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView
-  },
-  {
-    path: '/view-history',
-    name: 'view-history',
-    component: ViewHistory
-  },
-  {
-    path: '/comments',
-    name: 'comments',
-    component: MyComments
-  },
+  }
 ]
 
 const router = createRouter({
