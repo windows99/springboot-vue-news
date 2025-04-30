@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户订阅接口
@@ -32,69 +33,51 @@ public class UserSubscriptionController {
     private UserService userService;
 
     /**
-     * 添加订阅
+     * 保存用户的订阅标签
      *
-     * @param category 订阅分类
+     * @param tagIds 标签ID列表
      * @param request
      * @return
      */
-    @PostMapping("/add")
-    public BaseResponse<Boolean> addSubscription(@RequestParam("category") String category, HttpServletRequest request) {
-        if (StringUtils.isBlank(category)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订阅分类不能为空");
+    @PostMapping("/save")
+    public BaseResponse<Boolean> saveSubscriptions(@RequestBody List<Long> tagIds, HttpServletRequest request) {
+        if (tagIds == null || tagIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "标签ID列表不能为空");
         }
 
         User loginUser = userService.getLoginUser(request);
-        boolean result = userSubscriptionService.addSubscription(loginUser.getId(), category);
+        boolean result = userSubscriptionService.saveSubscriptions(loginUser.getId(), tagIds);
         return ResultUtils.success(result);
     }
 
     /**
-     * 取消订阅
-     *
-     * @param category 订阅分类
-     * @param request
-     * @return
-     */
-    @PostMapping("/cancel")
-    public BaseResponse<Boolean> cancelSubscription(@RequestParam("category") String category, HttpServletRequest request) {
-        if (StringUtils.isBlank(category)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订阅分类不能为空");
-        }
-
-        User loginUser = userService.getLoginUser(request);
-        boolean result = userSubscriptionService.cancelSubscription(loginUser.getId(), category);
-        return ResultUtils.success(result);
-    }
-
-    /**
-     * 获取用户的所有订阅分类
+     * 获取用户的所有订阅标签
      *
      * @param request
      * @return
      */
     @GetMapping("/list")
-    public BaseResponse<List<String>> getUserSubscriptions(HttpServletRequest request) {
+    public BaseResponse<List<Map<String, Object>>> getUserSubscriptions(HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
-        List<String> subscriptions = userSubscriptionService.getUserSubscriptions(loginUser.getId());
+        List<Map<String, Object>> subscriptions = userSubscriptionService.getUserSubscriptions(loginUser.getId());
         return ResultUtils.success(subscriptions);
     }
 
     /**
-     * 检查用户是否订阅了某个分类
+     * 检查用户是否订阅了某个标签
      *
-     * @param category 订阅分类
+     * @param tagId 标签ID
      * @param request
      * @return
      */
     @GetMapping("/check")
-    public BaseResponse<Boolean> isSubscribed(@RequestParam("category") String category, HttpServletRequest request) {
-        if (StringUtils.isBlank(category)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订阅分类不能为空");
+    public BaseResponse<Boolean> isSubscribed(@RequestParam("tagId") Long tagId, HttpServletRequest request) {
+        if (tagId == null || tagId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "标签ID不合法");
         }
 
         User loginUser = userService.getLoginUser(request);
-        boolean result = userSubscriptionService.isSubscribed(loginUser.getId(), category);
+        boolean result = userSubscriptionService.isSubscribed(loginUser.getId(), tagId.toString());
         return ResultUtils.success(result);
     }
 } 

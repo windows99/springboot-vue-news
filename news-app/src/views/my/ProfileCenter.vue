@@ -7,30 +7,34 @@
           <el-row>
             <!-- 左侧菜单 -->
             <el-col :span="5">
-              <el-menu
-                :default-active="activeMenu"
-                class="profile-menu"
-                @select="handleMenuSelect"
-              >
+              <el-menu :default-active="activeMenu" class="profile-menu" @select="handleMenuSelect">
                 <el-menu-item index="info">
-                  <el-icon><User /></el-icon>
+                  <el-icon>
+                    <User />
+                  </el-icon>
                   <span>个人信息</span>
                 </el-menu-item>
                 <el-menu-item index="comments">
-                  <el-icon><ChatDotRound /></el-icon>
+                  <el-icon>
+                    <ChatDotRound />
+                  </el-icon>
                   <span>我的评论</span>
                 </el-menu-item>
                 <el-menu-item index="history">
-                  <el-icon><Document /></el-icon>
+                  <el-icon>
+                    <Document />
+                  </el-icon>
                   <span>历史浏览</span>
                 </el-menu-item>
                 <el-menu-item index="tags">
-                  <el-icon><CollectionTag /></el-icon>
+                  <el-icon>
+                    <CollectionTag />
+                  </el-icon>
                   <span>兴趣标签</span>
                 </el-menu-item>
               </el-menu>
             </el-col>
-            
+
             <!-- 右侧内容区 -->
             <el-col :span="19">
               <div class="content-wrapper">
@@ -42,14 +46,16 @@
                       <h2>{{ user.userName }}</h2>
                       <p>{{ user.userProfile || '暂无个人简介' }}</p>
                       <el-button @click="toEditInfo" type="primary" round>
-                        <el-icon><Edit /></el-icon>
+                        <el-icon>
+                          <Edit />
+                        </el-icon>
                         编辑个人资料
                       </el-button>
                     </div>
                   </div>
-                  
+
                   <el-divider />
-                  
+
                   <div class="info-section">
                     <h3>基本信息</h3>
                     <div class="info-item">
@@ -65,9 +71,9 @@
                       <span>{{ user.email || '暂无' }}</span>
                     </div>
                   </div>
-                  
+
                   <el-divider />
-                  
+
                   <div class="info-section">
                     <h3>其他信息</h3>
                     <div class="info-item">
@@ -80,21 +86,14 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- 我的评论 -->
                 <div v-if="activeMenu === 'comments'" class="content-panel">
                   <div class="panel-header">
                     <h3>我的评论</h3>
                   </div>
-                  <el-table 
-                    :data="comments" 
-                    style="width: 100%" 
-                    v-loading="commentsLoading"
-                    empty-text="暂无评论数据"
-                    border
-                    stripe
-                    highlight-current-row
-                  >
+                  <el-table :data="comments" style="width: 100%" v-loading="commentsLoading" empty-text="暂无评论数据" border
+                    stripe highlight-current-row>
                     <el-table-column prop="content" label="评论内容" show-overflow-tooltip />
                     <el-table-column prop="newsTitle" label="新闻标题" show-overflow-tooltip />
                     <el-table-column prop="createTime" label="评论时间" width="180" />
@@ -110,33 +109,23 @@
                     </el-table-column>
                   </el-table>
                 </div>
-                
+
                 <!-- 历史浏览 -->
                 <div v-if="activeMenu === 'history'" class="content-panel">
                   <div class="panel-header">
                     <h3>浏览记录</h3>
                     <div class="panel-actions">
-                      <el-button 
-                        type="danger" 
-                        @click="handleClearAll" 
-                        :disabled="!viewHistory.length"
-                        round
-                      >
-                        <el-icon><Delete /></el-icon>
+                      <el-button type="danger" @click="handleClearAll" :disabled="!viewHistory.length" round>
+                        <el-icon>
+                          <Delete />
+                        </el-icon>
                         全部清空
                       </el-button>
                     </div>
                   </div>
-                  
-                  <el-table 
-                    :data="viewHistory" 
-                    style="width: 100%" 
-                    v-loading="historyLoading"
-                    empty-text="暂无浏览记录"
-                    border
-                    stripe
-                    highlight-current-row
-                  >
+
+                  <el-table :data="viewHistory" style="width: 100%" v-loading="historyLoading" empty-text="暂无浏览记录"
+                    border stripe highlight-current-row>
                     <el-table-column prop="newsTitle" label="标题" show-overflow-tooltip />
                     <el-table-column prop="viewTime" label="浏览时间" width="180" />
                     <el-table-column label="操作" width="150" fixed="right">
@@ -151,67 +140,80 @@
                     </el-table-column>
                   </el-table>
                 </div>
-                
+
                 <!-- 兴趣标签 -->
                 <div v-if="activeMenu === 'tags'" class="content-panel">
                   <div class="panel-header">
                     <h3>兴趣标签</h3>
+                    <div class="panel-actions">
+                      <el-input v-model="tagSearch" placeholder="搜索标签" class="tag-search" clearable @input="filterTags">
+                        <template #prefix>
+                          <el-icon>
+                            <Search />
+                          </el-icon>
+                        </template>
+                      </el-input>
+                    </div>
                   </div>
-                  <p class="tags-desc">选择您感兴趣的新闻标签，我们将为您推荐相关内容</p>
-                  
-                  <div class="tags-container">
-                    <el-tag
-                      v-for="tag in availableTags"
-                      :key="tag.id"
-                      :type="userTags.includes(tag.id) ? 'primary' : 'info'"
-                      class="tag-item"
-                      :effect="userTags.includes(tag.id) ? 'dark' : 'plain'"
-                      @click="toggleTag(tag.id)"
-                    >
-                      {{ tag.tagName }}
+
+                  <div class="tags-stats">
+                    <el-tag type="info" effect="plain">
+                      已选择 {{ userTags.length }} 个标签
+                    </el-tag>
+                    <el-tag type="success" effect="plain" v-if="userTags.length > 0">
+                      推荐内容将根据您的兴趣标签进行个性化展示
                     </el-tag>
                   </div>
-                  
+
+                  <div class="tags-container">
+                    <div v-for="tag in filteredTags" :key="tag.id" class="tag-item-wrapper"
+                      :class="{ 'selected': isTagSelected(tag.id) }" @click="toggleTag(tag.id)">
+                      <div class="tag-content">
+                        <el-icon class="tag-icon">
+                          <CollectionTag />
+                        </el-icon>
+                        <span class="tag-name">{{ tag.tagname }}</span>
+                        <el-icon class="check-icon" v-if="isTagSelected(tag.id)">
+                          <Check />
+                        </el-icon>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="tags-action">
                     <el-button type="primary" @click="saveUserTags" round>
-                      <el-icon><Check /></el-icon>
+                      <el-icon>
+                        <Check />
+                      </el-icon>
                       保存标签
+                    </el-button>
+                    <el-button @click="resetTags" round>
+                      <el-icon>
+                        <Refresh />
+                      </el-icon>
+                      重置
                     </el-button>
                   </div>
                 </div>
               </div>
             </el-col>
           </el-row>
-          
+
           <!-- 编辑信息对话框 -->
-          <el-dialog
-            v-model="editFormVisible"
-            title="编辑用户信息"
-            width="580px"
-            destroy-on-close
-            draggable
-          >
+          <el-dialog v-model="editFormVisible" title="编辑用户信息" width="580px" destroy-on-close draggable>
             <el-form :model="currentUser" label-position="top">
               <el-form-item label="用户名">
                 <el-input v-model="currentUser.userName" placeholder="请输入用户名" />
               </el-form-item>
-              
+
               <el-form-item label="头像">
-                <upload-avatar
-                  v-model:img-url="currentUser.userAvatar"
-                  biz="user_avatar"
-                />
+                <upload-avatar v-model:img-url="currentUser.userAvatar" biz="user_avatar" />
               </el-form-item>
-              
+
               <el-form-item label="简介">
-                <el-input
-                  v-model="currentUser.userProfile"
-                  type="textarea"
-                  rows="4"
-                  placeholder="请输入个人简介"
-                />
+                <el-input v-model="currentUser.userProfile" type="textarea" rows="4" placeholder="请输入个人简介" />
               </el-form-item>
-              
+
               <el-form-item label="性别">
                 <el-radio-group v-model="currentUser.gender">
                   <el-radio :label="0">女</el-radio>
@@ -219,7 +221,7 @@
                 </el-radio-group>
               </el-form-item>
             </el-form>
-            
+
             <template #footer>
               <span class="dialog-footer">
                 <el-button @click="cancelEdit">取消</el-button>
@@ -238,14 +240,16 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  User, 
-  ChatDotRound, 
-  Document, 
-  CollectionTag, 
-  Edit, 
-  Delete, 
-  Check 
+import {
+  User,
+  ChatDotRound,
+  Document,
+  CollectionTag,
+  Edit,
+  Delete,
+  Check,
+  Search,
+  Refresh
 } from '@element-plus/icons-vue'
 import NavBar from '@/components/NavBar.vue'
 import FooterBar from '@/components/FooterBar.vue'
@@ -253,15 +257,15 @@ import UploadAvatar from '@/components/ImageUploader/UploaderAvatar.vue'
 import { useUserStore } from '@/stores/modules/user'
 import { updateMyUserUsingPost } from '@/api/userController'
 import { getCommentListUsingGet, deleteCommentByIdUsingDelete } from '@/api/commentController'
-import { 
-  getViewHistoryUsingGet, 
-  deleteViewByIdUsingPost, 
-  deleteAllViewsByUserIdUsingPost 
+import {
+  getViewHistoryUsingGet,
+  deleteViewByIdUsingPost,
+  deleteAllViewsByUserIdUsingPost
 } from '@/api/userNewsViewController'
 import { message } from '@/utils/message'
 import { setToken } from '@/utils/auth'
 import { getTagListUsingGet } from '@/api/newsTagController'
-import { getUserSubscriptionsUsingGet, cancelSubscriptionUsingPost } from '@/api/userSubscriptionController'
+import { getUserSubscriptionsUsingGet, saveSubscriptionsUsingPost } from '@/api/userSubscriptionController'
 
 defineOptions({
   name: 'ProfileCenter'
@@ -363,7 +367,7 @@ const fetchComments = async () => {
   commentsLoading.value = true
   try {
     // 获取全部评论并筛选当前用户的评论
-    const res = await getCommentListUsingGet({ 
+    const res = await getCommentListUsingGet({
       page: 1,
       pageSize: 50
     })
@@ -458,20 +462,52 @@ const handleClearAll = async () => {
 
 // 兴趣标签相关功能
 const availableTags = ref([])
-const userTags = ref<number[]>([])
+const userTags = ref<string[]>([])
 
-// 获取所有标签及用户标签
+// 标签搜索相关
+const tagSearch = ref('')
+const filteredTags = ref([])
+
+// 过滤标签
+const filterTags = () => {
+  if (!tagSearch.value) {
+    filteredTags.value = availableTags.value
+    return
+  }
+  const searchText = tagSearch.value.toLowerCase()
+  filteredTags.value = availableTags.value.filter(tag =>
+    tag.tagname.toLowerCase().includes(searchText)
+  )
+}
+
+// 重置标签
+const resetTags = () => {
+  userTags.value = []
+  tagSearch.value = ''
+  filterTags()
+}
+
+// 判断标签是否被选中
+const isTagSelected = (tagId: string) => {
+  return userTags.value.includes(tagId)
+}
+
+// 修改获取标签的方法
 const fetchUserTags = async () => {
   try {
     // 获取所有标签
     const tagsRes = await getTagListUsingGet({})
     if (tagsRes.data) {
-      availableTags.value = tagsRes.data
-      
-      // 获取用户标签
+      // 过滤掉已删除的标签
+      availableTags.value = tagsRes.data.filter(tag => tag.isdelete === 0)
+      filteredTags.value = availableTags.value
+
+      // 获取用户已选择的标签
       const userTagsRes = await getUserSubscriptionsUsingGet({ userId: user.value.id as number })
       if (userTagsRes.data) {
-        userTags.value = userTagsRes.data
+        // 将字符串ID转换为数字
+        userTags.value = userTagsRes.data.map(item => item.id)
+        console.log('已选择的标签ID:', userTags.value) // 添加日志
       } else {
         userTags.value = []
       }
@@ -479,39 +515,27 @@ const fetchUserTags = async () => {
   } catch (error) {
     console.error('获取标签失败', error)
     ElMessage.error('获取标签失败')
-    
-    // 如果API不可用，使用模拟数据
-    availableTags.value = [
-      { id: 1, tagName: '科技' },
-      { id: 2, tagName: '财经' },
-      { id: 3, tagName: '体育' },
-      { id: 4, tagName: '娱乐' },
-      { id: 5, tagName: '政治' },
-      { id: 6, tagName: '教育' },
-      { id: 7, tagName: '健康' },
-      { id: 8, tagName: '旅游' }
-    ]
-    userTags.value = [1, 3, 6]
   }
 }
 
-const toggleTag = (tagId: number) => {
-  const index = userTags.value.indexOf(tagId)
+// 修改标签切换方法
+const toggleTag = (tagId: string) => {
+  const id = tagId
+  const index = userTags.value.indexOf(id)
   if (index > -1) {
     userTags.value.splice(index, 1)
   } else {
-    userTags.value.push(tagId)
+    userTags.value.push(id)
   }
+  console.log('当前选中的标签:', userTags.value) // 添加日志
 }
 
+// 修改保存标签的方法
 const saveUserTags = async () => {
   try {
     // 调用更新用户标签接口
-    const res = await cancelSubscriptionUsingPost({
-      userId: user.value.id as number,
-      tagIds: userTags.value
-    })
-    
+    const res = await saveSubscriptionsUsingPost(userTags.value)
+
     if (res.code === 0) {
       ElMessage.success('标签保存成功')
     } else {
@@ -683,11 +707,11 @@ onMounted(() => {
   .user-info {
     margin-left: 15px;
   }
-  
+
   .info-item {
     flex-direction: column;
   }
-  
+
   .label {
     margin-bottom: 4px;
   }
@@ -727,4 +751,109 @@ onMounted(() => {
 :deep(.el-button) {
   font-weight: 500;
 }
-</style> 
+
+/* 标签搜索框 */
+.tag-search {
+  width: 200px;
+}
+
+/* 标签统计 */
+.tags-stats {
+  margin: 15px 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* 标签容器 */
+.tags-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+/* 标签项 */
+.tag-item-wrapper {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+}
+
+.tag-item-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tag-item-wrapper.selected {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+.tag-content {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tag-icon {
+  font-size: 18px;
+  color: #909399;
+}
+
+.tag-item-wrapper.selected .tag-icon {
+  color: #409eff;
+}
+
+.tag-name {
+  flex: 1;
+  font-size: 14px;
+  color: #606266;
+}
+
+.tag-item-wrapper.selected .tag-name {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.check-icon {
+  font-size: 16px;
+  color: #67c23a;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+}
+
+.tag-item-wrapper.selected .check-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 标签操作按钮 */
+.tags-action {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .tags-container {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .tag-content {
+    padding: 12px;
+  }
+
+  .tag-name {
+    font-size: 13px;
+  }
+}
+</style>

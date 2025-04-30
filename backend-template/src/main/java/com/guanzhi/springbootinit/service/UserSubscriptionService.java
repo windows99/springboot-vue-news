@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.guanzhi.springbootinit.model.entity.UserSubscription;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户订阅服务
@@ -13,37 +14,28 @@ import java.util.List;
 public interface UserSubscriptionService extends IService<UserSubscription> {
 
     /**
-     * 添加用户订阅
+     * 保存用户的订阅标签
      *
      * @param userId 用户ID
-     * @param category 订阅分类
-     * @return 是否成功
+     * @param tagIds 标签ID列表
+     * @return 是否保存成功
      */
-    boolean addSubscription(Long userId, String category);
+    boolean saveSubscriptions(Long userId, List<Long> tagIds);
 
     /**
-     * 取消用户订阅
+     * 获取用户的所有订阅标签
      *
      * @param userId 用户ID
-     * @param category 订阅分类
-     * @return 是否成功
+     * @return 标签列表，包含ID和名称
      */
-    boolean cancelSubscription(Long userId, String category);
+    List<Map<String, Object>> getUserSubscriptions(Long userId);
 
     /**
-     * 获取用户的所有订阅分类
+     * 检查用户是否订阅了某个标签
      *
      * @param userId 用户ID
-     * @return 订阅分类列表
+     * @param tagId 标签ID
+     * @return 是否已订阅
      */
-    List<String> getUserSubscriptions(Long userId);
-
-    /**
-     * 检查用户是否订阅了某个分类
-     *
-     * @param userId 用户ID
-     * @param category 订阅分类
-     * @return 是否订阅
-     */
-    boolean isSubscribed(Long userId, String category);
+    boolean isSubscribed(Long userId, String tagId);
 } 

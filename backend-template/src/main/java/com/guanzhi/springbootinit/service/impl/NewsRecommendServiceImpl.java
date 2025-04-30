@@ -13,6 +13,7 @@ import com.guanzhi.springbootinit.model.entity.UserNewsView;
 import com.guanzhi.springbootinit.model.entity.UserSubscription;
 import com.guanzhi.springbootinit.service.NewsRecommendService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -52,7 +53,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         }
         
         // 获取用户的兴趣标签
-        List<String> userSubscriptions = getUserSubscriptions(userId);
+        List<Long> userSubscriptions = getUserSubscriptions(userId);
         
         // 获取用户的浏览历史
         List<Long> userViewedNewsIds = getUserViewedNewsIds(userId);
@@ -225,7 +226,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         }
         
         // 获取用户的兴趣标签
-        List<String> userSubscriptions = getUserSubscriptions(userId);
+        List<Long> userSubscriptions = getUserSubscriptions(userId);
         
         // 获取用户的浏览历史
         List<Long> userViewedNewsIds = getUserViewedNewsIds(userId);
@@ -310,7 +311,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
     /**
      * 获取用户的订阅分类
      */
-    private List<String> getUserSubscriptions(Long userId) {
+    private @NotNull List<Long> getUserSubscriptions(Long userId) {
         try {
             LambdaQueryWrapper<UserSubscription> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(UserSubscription::getUserId, userId)
@@ -372,7 +373,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
      * 采用多维度的评分机制实现个性化排序
      */
     private List<News> sortNewsByUserPreferences(List<News> newsList, 
-                                               List<String> userSubscriptions, 
+                                               List<Long> userSubscriptions,
                                                List<Long> userViewedCategories, 
                                                List<Long> userViewedNewsIds,
                                                List<Long> similarUserNewsIds) {

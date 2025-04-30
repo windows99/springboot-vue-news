@@ -2,36 +2,6 @@
 /* eslint-disable */
 import request from "../utils/http/index";
 
-/** addSubscription POST /api/user/subscription/add */
-export async function addSubscriptionUsingPost(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.addSubscriptionUsingPOSTParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseBoolean_>("/api/user/subscription/add", {
-    method: "POST",
-    params: {
-      ...params
-    },
-    ...(options || {})
-  });
-}
-
-/** cancelSubscription POST /api/user/subscription/cancel */
-export async function cancelSubscriptionUsingPost(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.cancelSubscriptionUsingPOSTParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseBoolean_>("/api/user/subscription/cancel", {
-    method: "POST",
-    params: {
-      ...params
-    },
-    ...(options || {})
-  });
-}
-
 /** isSubscribed GET /api/user/subscription/check */
 export async function isSubscribedUsingGet(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -51,8 +21,26 @@ export async function isSubscribedUsingGet(
 export async function getUserSubscriptionsUsingGet(options?: {
   [key: string]: any;
 }) {
-  return request<API.BaseResponseListString_>("/api/user/subscription/list", {
-    method: "GET",
+  return request<API.BaseResponseListMapStringObject_>(
+    "/api/user/subscription/list",
+    {
+      method: "GET",
+      ...(options || {})
+    }
+  );
+}
+
+/** saveSubscriptions POST /api/user/subscription/save */
+export async function saveSubscriptionsUsingPost(
+  body: number[],
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>("/api/user/subscription/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    data: body,
     ...(options || {})
   });
 }

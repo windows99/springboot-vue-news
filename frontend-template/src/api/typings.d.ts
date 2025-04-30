@@ -4,11 +4,6 @@ declare namespace API {
     word?: string;
   };
 
-  type addSubscriptionUsingPOSTParams = {
-    /** category */
-    category: string;
-  };
-
   type BaseResponseBoolean_ = {
     code?: number;
     data?: boolean;
@@ -30,6 +25,12 @@ declare namespace API {
   type BaseResponseListComment_ = {
     code?: number;
     data?: Comment[];
+    message?: string;
+  };
+
+  type BaseResponseListMapStringObject_ = {
+    code?: number;
+    data?: Record<string, any>[];
     message?: string;
   };
 
@@ -60,12 +61,6 @@ declare namespace API {
   type BaseResponseListSensitiveWord_ = {
     code?: number;
     data?: SensitiveWord[];
-    message?: string;
-  };
-
-  type BaseResponseListString_ = {
-    code?: number;
-    data?: string[];
     message?: string;
   };
 
@@ -145,11 +140,6 @@ declare namespace API {
     code?: number;
     data?: UserVO;
     message?: string;
-  };
-
-  type cancelSubscriptionUsingPOSTParams = {
-    /** category */
-    category: string;
   };
 
   type Comment = {
@@ -294,8 +284,8 @@ declare namespace API {
   };
 
   type isSubscribedUsingGETParams = {
-    /** category */
-    category: string;
+    /** tagId */
+    tagId: number;
   };
 
   type LoginUserVO = {

@@ -16,7 +16,7 @@ export default {
     {
       path: "/import/news",
       name: "ImportNews",
-      component: () => import("@/views/news/import.vue"),
+      component: () => import("@/views/import/index.vue"),
       meta: {
         title: "导入新闻",
         roles: ["admin"],

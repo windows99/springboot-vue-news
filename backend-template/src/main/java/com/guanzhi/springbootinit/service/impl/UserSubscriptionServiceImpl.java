@@ -1,75 +1,63 @@
 package com.guanzhi.springbootinit.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.mapper.UserSubscriptionMapper;
 import com.guanzhi.springbootinit.model.entity.UserSubscription;
 import com.guanzhi.springbootinit.service.UserSubscriptionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
- * 用户订阅服务实现类
+ * 用户订阅服务实现
  *
  * @author sk
  */
+@Slf4j
 @Service
-public class UserSubscriptionServiceImpl extends ServiceImpl<UserSubscriptionMapper, UserSubscription>
-        implements UserSubscriptionService {
+public class UserSubscriptionServiceImpl extends ServiceImpl<UserSubscriptionMapper, UserSubscription> implements UserSubscriptionService {
 
     @Override
-    public boolean addSubscription(Long userId, String category) {
-        // 检查是否已经订阅
-        if (isSubscribed(userId, category)) {
+    @Transactional(rollbackFor = Exception.class)
+    public boolean saveSubscriptions(Long userId, List<Long> tagIds) {
+        try {
+            // 先删除用户的所有订阅
+            this.lambdaUpdate()
+                    .eq(UserSubscription::getUserId, userId)
+                    .remove();
+            
+            // 批量插入新的订阅
+            if (tagIds != null && !tagIds.isEmpty()) {
+                List<UserSubscription> subscriptions = tagIds.stream()
+                        .map(category -> {
+                            UserSubscription subscription = new UserSubscription();
+                            subscription.setUserId(userId);
+                            subscription.setCategory(category);
+                            return subscription;
+                        })
+                        .toList();
+                return this.saveBatch(subscriptions);
+            }
             return true;
-        }
-
-        // 创建新的订阅记录
-        UserSubscription subscription = new UserSubscription();
-        subscription.setUserId(userId);
-        subscription.setCategory(category);
-        subscription.setStatus(1); // 1-订阅中
-
-        return save(subscription);
-    }
-
-    @Override
-    public boolean cancelSubscription(Long userId, String category) {
-        QueryWrapper<UserSubscription> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId", userId);
-        queryWrapper.eq("category", category);
-        queryWrapper.eq("status", 1); // 只查找订阅中的记录
-
-        UserSubscription subscription = getOne(queryWrapper);
-        if (subscription == null) {
+        } catch (Exception e) {
+            log.error("保存用户订阅失败, userId: {}, tagIds: {}", userId, tagIds, e);
             return false;
         }
-
-        subscription.setStatus(0); // 0-取消
-        return updateById(subscription);
     }
 
     @Override
-    public List<String> getUserSubscriptions(Long userId) {
-        QueryWrapper<UserSubscription> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId", userId);
-        queryWrapper.eq("status", 1); // 只查找订阅中的记录
-
-        List<UserSubscription> subscriptions = list(queryWrapper);
-        return subscriptions.stream()
-                .map(UserSubscription::getCategory)
-                .collect(Collectors.toList());
+    public List<Map<String, Object>> getUserSubscriptions(Long userId) {
+        return baseMapper.getUserSubscriptions(userId);
     }
 
     @Override
     public boolean isSubscribed(Long userId, String category) {
-        QueryWrapper<UserSubscription> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId", userId);
-        queryWrapper.eq("category", category);
-        queryWrapper.eq("status", 1); // 只查找订阅中的记录
-
-        return count(queryWrapper) > 0;
+        return this.lambdaQuery()
+                .eq(UserSubscription::getUserId, userId)
+                .eq(UserSubscription::getCategory, category)
+                .count() > 0;
     }
 } 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.guanzhi.springbootinit.mapper.UserSubscriptionMapper">
+
+    <select id="getUserSubscriptions" resultType="java.util.Map">
+        SELECT t.id, t.tagname
+        FROM news_tag t
+        INNER JOIN user_subscription s ON t.id = s.category
+        WHERE s.userId = #{userId}
+        AND s.isDelete = 0
+        AND t.isDelete = 0
+    </select>
+
+</mapper> 

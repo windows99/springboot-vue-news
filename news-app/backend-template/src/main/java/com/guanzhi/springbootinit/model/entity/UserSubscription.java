@@ -1,25 +1,17 @@
 package com.guanzhi.springbootinit.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
 
-import lombok.Data;
-
 /**
- * 用户订阅
- *
- * @author sk
+ * 用户订阅表
  */
 @TableName(value = "user_subscription")
 @Data
 public class UserSubscription implements Serializable {
-
     /**
      * id
      */
@@ -32,14 +24,9 @@ public class UserSubscription implements Serializable {
     private Long userId;
 
     /**
-     * 订阅分类
+     * 分类
      */
-    private Long category;
-
-    /**
-     * 状态 0-取消 1-订阅中
-     */
-    private Integer status;
+    private String category;
 
     /**
      * 创建时间

@@ -9,7 +9,7 @@ export default {
   meta: {
     icon: "bell",
     title: "推送管理",
-    rank: 0
+    rank: 2
   },
   children: [
     {
