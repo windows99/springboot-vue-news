@@ -2,7 +2,6 @@ package com.guanzhi.springbootinit.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -10,52 +9,56 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 新闻推送实体类
+ * 新闻反馈
+ *
+ * @author sk
  */
-@TableName(value = "news_push")
 @Data
-public class NewsPush implements Serializable {
+@TableName("news_feedback")
+public class NewsFeedback implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * id
      */
     @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 用户ID
+     * 反馈用户ID
      */
     private Long userId;
 
     /**
-     * 新闻ID
+     * 关联新闻ID
      */
     private Long newsId;
 
     /**
-     * 推送时间
+     * 新闻标题
      */
-    private Date pushTime;
+    private String title;
 
     /**
-     * 推送类型: 1-即时推送 2-定时推送
+     * 反馈内容
      */
-    private Integer pushType;
+    private String content;
+
 
     /**
-     * 推送状态: 0-待推送 1-已推送 2-推送失败
+     * 审核备注
      */
-    private Integer status;
+    private String reviewNotes;
 
     /**
-     * 是否已读: 0-未读 1-已读
+     * 审核时间
      */
-    private Integer isRead;
+    private Date reviewTime;
 
     /**
-     * 阅读时间
+     * 审核人ID
      */
-    private Date readTime;
+    private Long reviewerId;
 
     /**
      * 创建时间
@@ -70,8 +73,5 @@ public class NewsPush implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic
     private Integer isDelete;
-
-    private static final long serialVersionUID = 1L;
-}
+} 

@@ -7,15 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.common.ErrorCode;
-import com.guanzhi.springbootinit.constant.CommonConstant;
 import com.guanzhi.springbootinit.exception.BusinessException;
 import com.guanzhi.springbootinit.model.dto.news.NewsQueryRequest;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.mapper.NewsMapper;
 import com.guanzhi.springbootinit.service.NewsService;
-import com.guanzhi.springbootinit.utils.SqlUtils;
 import com.obs.services.internal.ServiceException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -183,34 +183,28 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 获取api的新闻数据
+     *
      * @param channel
      * @return
      */
     @Override
     public JSONObject getJisunews(String channel) {
-        String host = "https://jisunews.market.alicloudapi.com";
-        String path = "/news/get";
+        String host = "https://lznews.market.alicloudapi.com";
+        String path = "/lundroid/news";
+        String method = "GET";
         String appcode = "71f6a5c816cb4e33b91615b08b10f392"; // 考虑从配置文件中读取
 
-        Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<String, String>();
+        //最后在header中的格式(中间是英文空格)为Authorization:APPCODE 83359fd73fe94948385f570e3c139105
         headers.put("Authorization", "APPCODE " + appcode);
-        headers.put("Content-Type", "application/json; charset=UTF-8");
-
-        Map<String, String> querys = new HashMap<>();
+        Map<String, String> querys = new HashMap<String, String>();
         querys.put("channel", channel);
-        querys.put("num", "20"); // 获取10条新闻
-        querys.put("start", "0"); // 从第一个开始
-
-        String url = host + path;
-        url = buildURLWithQueryParams(url, querys);
+        querys.put("page", "1");
 
         try {
-            String response = HttpUtils.doGet(url, headers);
-            log.info("成功获取数据: {}", response);
-            // 解析JSON并处理新闻数据
-            JSONObject jsonObject = JSONObject.parseObject(response);
-
-            return  jsonObject;
+            HttpResponse response = HttpUtils.doGet(host, path, method, headers, querys);
+            String responseBody = EntityUtils.toString(response.getEntity());
+            return JSONObject.parseObject(responseBody);
         } catch (Exception e) {
             log.error("调用Jisu新闻API失败", e);
             throw new RuntimeException("调用Jisu新闻API失败", e);

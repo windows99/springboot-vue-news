@@ -11,7 +11,7 @@
  Target Server Version : 50743
  File Encoding         : 65001
 
- Date: 30/03/2025 18:10:02
+ Date: 06/05/2025 22:07:26
 */
 
 SET NAMES utf8mb4;
@@ -37,7 +37,7 @@ CREATE TABLE `comment`  (
   INDEX `idx_userId`(`userId`) USING BTREE,
   CONSTRAINT `fk_comment_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_comment_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1903250791972507651 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1909099338991816707 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for news
@@ -66,13 +66,36 @@ CREATE TABLE `news`  (
   INDEX `idx_author`(`author`) USING BTREE,
   INDEX `idx_source`(`source`) USING BTREE,
   CONSTRAINT `fk_news_tag` FOREIGN KEY (`category`) REFERENCES `news_tag` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1903251148559650839 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1909159938258259970 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for news_feedback
+-- ----------------------------
+DROP TABLE IF EXISTS `news_feedback`;
+CREATE TABLE `news_feedback`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `userId` bigint(20) NOT NULL COMMENT '反馈用户ID',
+  `newsId` bigint(20) NULL DEFAULT NULL COMMENT '关联新闻ID（如果是新新闻则为NULL）',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '新闻标题',
+  `content` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '反馈内容',
+  `reviewNotes` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审核备注',
+  `reviewTime` datetime NULL DEFAULT NULL COMMENT '审核时间',
+  `reviewerId` bigint(20) NULL DEFAULT NULL COMMENT '审核人ID',
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`, `isDelete`) USING BTREE,
+  INDEX `idx_userId`(`userId`) USING BTREE,
+  INDEX `idx_newsId`(`newsId`) USING BTREE,
+  CONSTRAINT `fk_news_feedback_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_news_feedback_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '新闻反馈' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for news_push
 -- ----------------------------
 DROP TABLE IF EXISTS `news_push`;
-CREATE TABLE `news_push` (
+CREATE TABLE `news_push`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `userId` bigint(20) NOT NULL COMMENT '用户ID',
   `newsId` bigint(20) NOT NULL COMMENT '新闻ID',
@@ -88,9 +111,35 @@ CREATE TABLE `news_push` (
   INDEX `idx_userId`(`userId`) USING BTREE,
   INDEX `idx_newsId`(`newsId`) USING BTREE,
   INDEX `idx_pushTime`(`pushTime`) USING BTREE,
-  CONSTRAINT `fk_news_push_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_news_push_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送记录' ROW_FORMAT = DYNAMIC;
+  CONSTRAINT `fk_news_push_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_news_push_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送记录' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for news_push_config
+-- ----------------------------
+DROP TABLE IF EXISTS `news_push_config`;
+CREATE TABLE `news_push_config`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `userId` bigint(20) NOT NULL COMMENT '用户ID',
+  `newsId` bigint(20) NULL DEFAULT NULL COMMENT '新闻ID',
+  `pushName` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送名称',
+  `pushType` tinyint(4) NOT NULL COMMENT '推送类型（0-按间隔时间推送，1-按固定时间推送）',
+  `pushTimeExpression` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '推送时间表达式',
+  `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '推送状态（0-暂停，1-激活）',
+  `nextPushTime` datetime NULL DEFAULT NULL COMMENT '下次推送时间',
+  `lastExecuteTime` datetime NULL DEFAULT NULL COMMENT '最后执行时间',
+  `pushTargets` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送目标',
+  `contentTemplate` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '推送内容模板',
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_userId`(`userId`) USING BTREE,
+  INDEX `idx_newsId`(`newsId`) USING BTREE,
+  CONSTRAINT `fk_news_push_config_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_news_push_config_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送配置' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for news_tag
@@ -105,24 +154,6 @@ CREATE TABLE `news_tag`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_tagName`(`tagName`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1903048402666127362 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻标签' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for news_tag_relation
--- ----------------------------
-DROP TABLE IF EXISTS `news_tag_relation`;
-CREATE TABLE `news_tag_relation`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `newsId` bigint(20) NOT NULL COMMENT '新闻id',
-  `tagId` bigint(20) NOT NULL COMMENT '标签id',
-  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_newsId`(`newsId`) USING BTREE,
-  INDEX `idx_tagId`(`tagId`) USING BTREE,
-  CONSTRAINT `fk_news_tag_relation_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_news_tag_relation_tag` FOREIGN KEY (`tagId`) REFERENCES `news_tag` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻-标签关联' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for sensitive_word
@@ -159,7 +190,7 @@ CREATE TABLE `user`  (
   `gender` tinyint(4) NULL DEFAULT 2 COMMENT '0-女，1-男，2-未知',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_unionId`(`openId`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1904901753699782659 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1909095734444707843 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_news_view
@@ -173,7 +204,28 @@ CREATE TABLE `user_news_view`  (
   `viewTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
   PRIMARY KEY (`id`, `userId`) USING BTREE,
   UNIQUE INDEX `uk_user_news_view`(`userId`, `newsId`, `viewTime`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1903059269814190082 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户浏览新闻记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1916460997262974979 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户浏览新闻记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for user_operation_log
+-- ----------------------------
+DROP TABLE IF EXISTS `user_operation_log`;
+CREATE TABLE `user_operation_log`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `userId` bigint(20) NOT NULL COMMENT '用户ID',
+  `operationType` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作类型：VIEW-浏览、LIKE-点赞、COMMENT-评论、FEEDBACK-反馈、SUBSCRIBE-订阅',
+  `targetId` bigint(20) NOT NULL COMMENT '操作目标ID',
+  `targetType` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '操作目标类型：NEWS-新闻、TAG-标签、COMMENT-评论',
+  `operationTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  `operationDetail` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '操作详情',
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_userId`(`userId`) USING BTREE,
+  INDEX `idx_operationTime`(`operationTime`) USING BTREE,
+  CONSTRAINT `fk_user_operation_log_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户操作日志' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for user_subscription
@@ -182,7 +234,7 @@ DROP TABLE IF EXISTS `user_subscription`;
 CREATE TABLE `user_subscription`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `userId` bigint(20) NOT NULL COMMENT '用户id',
-  `category` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '订阅分类',
+  `category` bigint(20) NULL DEFAULT NULL COMMENT '订阅分类',
   `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '状态 0-取消 1-订阅中',
   `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -190,33 +242,8 @@ CREATE TABLE `user_subscription`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_userId`(`userId`) USING BTREE,
   INDEX `idx_category`(`category`) USING BTREE,
+  CONSTRAINT `fk_news_tag_user` FOREIGN KEY (`category`) REFERENCES `news_tag` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_user_subscription_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户订阅' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for news_push_config
--- ----------------------------
-DROP TABLE IF EXISTS `news_push_config`;
-CREATE TABLE `news_push_config` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `userId` bigint(20) NOT NULL COMMENT '用户ID',
-  `newsId` bigint(20) NULL DEFAULT NULL COMMENT '新闻ID',
-  `pushName` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送名称',
-  `pushType` tinyint(4) NOT NULL COMMENT '推送类型（0-按间隔时间推送，1-按固定时间推送）',
-  `pushTimeExpression` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '推送时间表达式',
-  `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '推送状态（0-暂停，1-激活）',
-  `nextPushTime` datetime NULL DEFAULT NULL COMMENT '下次推送时间',
-  `lastExecuteTime` datetime NULL DEFAULT NULL COMMENT '最后执行时间',
-  `pushTargets` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '推送目标',
-  `contentTemplate` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '推送内容模板',
-  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `isDelete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_userId`(`userId`) USING BTREE,
-  INDEX `idx_newsId`(`newsId`) USING BTREE,
-  CONSTRAINT `fk_news_push_config_user` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_news_push_config_news` FOREIGN KEY (`newsId`) REFERENCES `news` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '新闻推送配置' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1917501187121225732 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户订阅' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
