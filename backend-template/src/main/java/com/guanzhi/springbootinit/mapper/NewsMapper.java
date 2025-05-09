@@ -28,7 +28,7 @@ public interface NewsMapper extends BaseMapper<News> {
      */
     @Select("<script>" +
             "SELECT DISTINCT n.* FROM news n " +
-            "WHERE n.isDelete = 0 AND n.status = 1 " +
+            "WHERE n.isDelete = 0 AND n.status IN (1, 2, 3) " +
             "AND n.category IN " +
             "<foreach collection='tagIds' item='tagId' open='(' separator=',' close=')'>" +
             "#{tagId}" +

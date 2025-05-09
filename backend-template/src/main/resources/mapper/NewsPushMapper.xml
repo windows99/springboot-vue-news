@@ -38,13 +38,26 @@
     </insert>
 
     <select id="getRecentViewedNewsIds" resultType="java.lang.Long">
-        SELECT DISTINCT v.newsId 
-        FROM user_news_view v 
-        JOIN news n ON v.newsId = n.id 
-        WHERE v.userId = #{userId} 
-        AND n.isDelete = 0 
-        AND n.status IN (1, 2, 3)  <!-- 放宽状态条件，包括待审核、审核中、已发布 -->
-        ORDER BY v.viewTime DESC 
+        SELECT DISTINCT newsId 
+        FROM news_push 
+        WHERE userId = #{userId} 
+        AND isDelete = 0 
+        AND isRead = 1
+        ORDER BY readTime DESC 
+        LIMIT #{limit}
+    </select>
+
+    <select id="getRecentViewedNewsWithTags" resultType="java.util.Map">
+        SELECT 
+            np.newsId,
+            n.category as tagId,
+            np.readTime
+        FROM news_push np
+        JOIN news n ON np.newsId = n.id
+        WHERE np.userId = #{userId}
+        AND np.isDelete = 0
+        AND np.isRead = 1
+        ORDER BY np.readTime DESC
         LIMIT #{limit}
     </select>
 

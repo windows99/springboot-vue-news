@@ -43,18 +43,10 @@ public interface NewsPushMapper extends BaseMapper<NewsPush> {
     /**
      * 获取用户最近浏览的新闻ID列表
      */
-    @Select("SELECT newsId FROM news_push " +
-            "WHERE userId = #{userId} AND isRead = 1 AND isDelete = 0 " +
-            "ORDER BY readTime DESC LIMIT #{limit}")
     List<Long> getRecentViewedNewsIds(@Param("userId") Long userId, @Param("limit") Integer limit);
 
     /**
      * 获取用户最近浏览的新闻及其标签
      */
-    @Select("SELECT np.newsId, n.category as tagId, np.readTime " +
-            "FROM news_push np " +
-            "JOIN news n ON np.newsId = n.id " +
-            "WHERE np.userId = #{userId} AND np.isRead = 1 AND np.isDelete = 0 " +
-            "ORDER BY np.readTime DESC LIMIT #{limit}")
     List<Map<String, Object>> getRecentViewedNewsWithTags(@Param("userId") Long userId, @Param("limit") Integer limit);
 } 

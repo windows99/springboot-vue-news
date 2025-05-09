@@ -37,57 +37,20 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     private SensitiveWordService sensitiveWordService;
 
     @Override
-    public QueryWrapper<News> getQueryWrapper(NewsQueryRequest newsQueryRequest) {
+    public QueryWrapper<News> getQueryWrapper(NewsQueryRequest request) {
+
+        if (request == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        System.out.println(request);
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
-        if (newsQueryRequest == null) {
-            return queryWrapper;
-        }
-        
-        // 添加新闻ID筛选条件
-        Long id = newsQueryRequest.getId();
-        if (id != null) {
-            queryWrapper.eq("id", id);
-        }
-        
-        // 添加标题筛选条件
-        String title = newsQueryRequest.getTitle();
-        if (StringUtils.isNotBlank(title)) {
-            queryWrapper.like("title", title);
-        }
-        
-        // 添加内容筛选条件
-        String content = newsQueryRequest.getContent();
-        if (StringUtils.isNotBlank(content)) {
-            queryWrapper.like("content", content);
-        }
-        
-        // 添加分类筛选条件
-        Long category = newsQueryRequest.getCategory();
-        if (category != null) {
-            queryWrapper.eq("category", category);
-        }
-        
-        // 添加状态筛选条件
-        Integer status = newsQueryRequest.getStatus();
-        if (status != null) {
-            queryWrapper.eq("status", status);
-        }
-        
-        // 添加作者筛选条件
-        String author = newsQueryRequest.getAuthor();
-        if (StringUtils.isNotBlank(author)) {
-            queryWrapper.like("author", author);
-        }
-        
-        // 添加来源筛选条件
-        String source = newsQueryRequest.getSource();
-        if (StringUtils.isNotBlank(source)) {
-            queryWrapper.like("source", source);
-        }
-        
-        // 只查询未删除的新闻
-        queryWrapper.eq("isDelete", 0);
-        
+        queryWrapper.eq("isDelete", 0)
+                .eq(request.getCategory() != null, "category", request.getCategory())
+                .eq(request.getStatus() != null, "status", request.getStatus())
+                .like(StringUtils.isNotBlank(request.getTitle()), "title", request.getTitle())
+                .like(StringUtils.isNotBlank(request.getAuthor()), "author", request.getAuthor())
+                .orderByDesc(StringUtils.isBlank(request.getSortField()) ? "createTime" : request.getSortField());
+        System.out.println(queryWrapper);
         return queryWrapper;
     }
 
@@ -175,11 +138,11 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public boolean deleteNewsById(Long id) {
         try {
-            // 使用软删除，将isdelete设置为1
+            // 使用软删除，将isDelete设置为1
             return newsMapper.update(null,
                     new LambdaUpdateWrapper<News>()
                             .eq(News::getId, id)
-                            .set(News::getIsdelete, 1)
+                            .set(News::getIsDelete, 1)
                             .set(News::getUpdateTime, new Date())) > 0;
         } catch (Exception e) {
             log.error("删除新闻失败", e);

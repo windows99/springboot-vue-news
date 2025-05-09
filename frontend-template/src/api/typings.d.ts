@@ -124,9 +124,15 @@ declare namespace API {
     message?: string;
   };
 
-  type BaseResponsePageNewsPush_ = {
+  type BaseResponsePageNewsFeedbackVO_ = {
     code?: number;
-    data?: PageNewsPush_;
+    data?: PageNewsFeedbackVO_;
+    message?: string;
+  };
+
+  type BaseResponsePageNewsPushVO_ = {
+    code?: number;
+    data?: PageNewsPushVO_;
     message?: string;
   };
 
@@ -266,6 +272,13 @@ declare namespace API {
     limit?: number;
   };
 
+  type getPendingFeedbackListUsingGETParams = {
+    /** current */
+    current?: number;
+    /** pageSize */
+    pageSize?: number;
+  };
+
   type getPushRecordDetailUsingGETParams = {
     /** recordId */
     recordId: number;
@@ -379,6 +392,22 @@ declare namespace API {
     reviewNotes?: string;
   };
 
+  type NewsFeedbackVO = {
+    content?: string;
+    createTime?: string;
+    id?: number;
+    isDelete?: number;
+    newsId?: number;
+    newsTitle?: string;
+    reviewNotes?: string;
+    reviewTime?: string;
+    reviewerId?: number;
+    title?: string;
+    updateTime?: string;
+    userId?: number;
+    username?: string;
+  };
+
   type NewsPush = {
     createTime?: string;
     id?: number;
@@ -401,18 +430,21 @@ declare namespace API {
     coverImage?: string;
     createTime?: string;
     isDelete?: number;
-    isRecommend?: number;
-    isTop?: number;
     likeCount?: number;
-    newsId?: number;
+    newsId?: string;
     publishTime?: string;
     source?: string;
     status?: number;
-    tags?: string;
     title?: string;
     updateTime?: string;
-    userId?: number;
+    userId?: string;
     viewCount?: number;
+  };
+
+  type NewsPushVO = {
+    newsCoverImage?: string;
+    newsPush?: NewsPush;
+    newsTitle?: string;
   };
 
   type NewsQueryRequest = {
@@ -453,14 +485,27 @@ declare namespace API {
     total?: number;
   };
 
-  type PageNewsPush_ = {
+  type PageNewsFeedbackVO_ = {
     countId?: string;
     current?: number;
     maxLimit?: number;
     optimizeCountSql?: boolean;
     orders?: OrderItem[];
     pages?: number;
-    records?: NewsPush[];
+    records?: NewsFeedbackVO[];
+    searchCount?: boolean;
+    size?: number;
+    total?: number;
+  };
+
+  type PageNewsPushVO_ = {
+    countId?: string;
+    current?: number;
+    maxLimit?: number;
+    optimizeCountSql?: boolean;
+    orders?: OrderItem[];
+    pages?: number;
+    records?: NewsPushVO[];
     searchCount?: boolean;
     size?: number;
     total?: number;

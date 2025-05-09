@@ -4,31 +4,44 @@ import com.guanzhi.springbootinit.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@Data
+/**
+ * 新闻查询请求
+ */
 @EqualsAndHashCode(callSuper = true)
+@Data
 public class NewsQueryRequest extends PageRequest {
     /**
-     * id
+     * 新闻ID
      */
     private Long id;
+
     /**
-     * 新闻标题（模糊查询）
+     * 标题
      */
     private String title;
-    
+
     /**
-     * 作者名称（模糊查询）
+     * 内容
      */
-    private String author;
-    
+    private String content;
+
     /**
-     * 分类ID（精确匹配）
+     * 分类
      */
     private Long category;
 
+    /**
+     * 状态
+     */
+    private Integer status;
 
     /**
-     * 状态（精确匹配）
+     * 作者
      */
-    private Long status;
+    private String author;
+
+    /**
+     * 来源
+     */
+    private String source;
 }

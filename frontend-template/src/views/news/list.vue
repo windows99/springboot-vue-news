@@ -27,10 +27,9 @@
             </el-form-item>
           </el-col>
 
-          <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
-            <el-form-item label="发布时间">
-              <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
-                end-placeholder="结束日期" value-format="YYYY-MM-DD" />
+          <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4">
+            <el-form-item label="新闻ID">
+              <el-input v-model="queryRequest.id" placeholder="请输入新闻ID" clearable />
             </el-form-item>
           </el-col>
 
@@ -111,7 +110,6 @@ const loading = ref(false)
 const currentPage = ref<number>(1)
 const pageSize = ref<number>(10)
 const total = ref<number>(0)
-const dateRange = ref()
 const queryRequest = ref({
   current: 1,
   pageSize: pageSize.value,
@@ -119,8 +117,7 @@ const queryRequest = ref({
   status: undefined,
   author: undefined,
   title: undefined,
-  startTime: undefined,
-  endTime: undefined
+  id: undefined
 })
 
 
@@ -326,17 +323,6 @@ const formatStatus = (row) => {
 
 
 
-// 处理日期范围
-// watch(dateRange, (newVal) => {
-//   if (newVal && newVal.length === 2) {
-//     queryRequest.value.startTime = newVal[0]
-//     queryRequest.value.endTime = newVal[1]
-//   } else {
-//     queryRequest.value.startTime = undefined
-//     queryRequest.value.endTime = undefined
-//   }
-// })
-
 // 处理查询
 const handleSearch = () => {
   currentPage.value = 1
@@ -352,10 +338,8 @@ const handleReset = () => {
     status: undefined,
     author: undefined,
     title: undefined,
-    startTime: undefined,
-    endTime: undefined
+    id: undefined
   }
-  dateRange.value = []
   currentPage.value = 1
   fetchData()
 }

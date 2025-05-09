@@ -11,6 +11,7 @@ import com.guanzhi.springbootinit.model.dto.news.NewsFeedbackRequest;
 import com.guanzhi.springbootinit.model.dto.news.NewsFeedbackReviewRequest;
 import com.guanzhi.springbootinit.model.entity.NewsFeedback;
 import com.guanzhi.springbootinit.model.entity.User;
+import com.guanzhi.springbootinit.model.vo.NewsFeedbackVO;
 import com.guanzhi.springbootinit.service.NewsFeedbackService;
 import com.guanzhi.springbootinit.service.UserOperationLogService;
 import com.guanzhi.springbootinit.service.UserService;
@@ -90,13 +91,17 @@ public class NewsFeedbackController {
     /**
      * 获取待审核反馈列表
      *
+     * @param current 当前页
+     * @param pageSize 每页大小
      * @return 反馈列表
      */
     @GetMapping("/pending")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<List<NewsFeedback>> getPendingFeedbackList() {
-        List<NewsFeedback> list = newsFeedbackService.getPendingFeedbackList();
-        return ResultUtils.success(list);
+    public BaseResponse<Page<NewsFeedbackVO>> getPendingFeedbackList(
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "10") long pageSize) {
+        Page<NewsFeedbackVO> page = newsFeedbackService.getPendingFeedbackList(current, pageSize);
+        return ResultUtils.success(page);
     }
 
     /**

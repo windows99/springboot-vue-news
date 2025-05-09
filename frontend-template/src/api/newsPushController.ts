@@ -85,7 +85,7 @@ export async function listPushRecordsUsingGet(
   params: API.listPushRecordsUsingGETParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponsePageNewsPush_>(
+  return request<API.BaseResponsePageNewsPushVO_>(
     "/api/api/news/push/record/list",
     {
       method: "GET",

@@ -198,6 +198,10 @@ public class NewsPushServiceImpl implements NewsPushService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int pushPersonalizedNews(Long userId, Integer limit) {
+        if (userId == null || limit == null || limit <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
         // 获取用户订阅的标签
         List<Long> tagIds = userSubscriptionMapper.getUserTags(userId);
         if (tagIds.isEmpty()) {
@@ -206,7 +210,7 @@ public class NewsPushServiceImpl implements NewsPushService {
         }
         
         // 获取用户最近浏览的新闻ID列表（用于去重）
-        List<Long> recentViewedNewsIds = newsPushMapper.getRecentViewedNewsIds(userId, 20); // 减少到最近20条浏览记录
+        List<Long> recentViewedNewsIds = newsPushMapper.getRecentViewedNewsIds(userId, 20);
         
         // 获取用户浏览历史中的标签权重
         Map<Long, Integer> tagWeights = calculateTagWeights(userId);
@@ -265,6 +269,7 @@ public class NewsPushServiceImpl implements NewsPushService {
             WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "为您推荐以下新闻", pushDTOs);
             String messageJson = JSON.toJSONString(message);
             WebSocketServer.sendMessageToUser(userId.toString(), messageJson);
+            log.info("成功向用户 {} 推送 {} 条个性化新闻", userId, pushDTOs.size());
         } catch (Exception e) {
             log.error("发送WebSocket通知失败，用户ID: {}", userId, e);
         }
@@ -303,7 +308,7 @@ public class NewsPushServiceImpl implements NewsPushService {
         
         return tagWeights;
     }
-
+    
     @Override
     public List<NewsPushDTO> getUnreadPushes(Long userId) {
         if (userId == null) {
@@ -391,7 +396,7 @@ public class NewsPushServiceImpl implements NewsPushService {
         
         return pushRecord;
     }
-
+    
     @Override
     public Page<NewsPushVO> getUserPushRecordsWithNews(Long userId, long current, long pageSize, Integer isRead) {
         // 查询用户的推送记录

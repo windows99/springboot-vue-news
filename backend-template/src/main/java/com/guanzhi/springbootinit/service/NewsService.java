@@ -19,7 +19,13 @@ public interface NewsService extends IService<News> {
 
     void updateNews(News news);
 
-    void deleteNewsById(Long newsId);
+    /**
+     * 删除新闻
+     *
+     * @param id 新闻ID
+     * @return 是否删除成功
+     */
+    boolean deleteNewsById(Long id);
 
     QueryWrapper<News> getQueryWrapper(NewsQueryRequest newsQueryRequest);
 

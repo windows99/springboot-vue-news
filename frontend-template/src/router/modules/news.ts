@@ -59,6 +59,16 @@ export default {
         roles: ["admin", "editor"],
         keepAlive: true
       }
+    },
+    {
+      path: '/news/feedback',
+      name: 'NewsFeedback',
+      component: () => import('@/views/news/feedback.vue'),
+      meta: {
+        title: '反馈新闻',
+        roles: ["admin", "manage"],
+        keepAlive: true
+      }
     }
   ]
 }

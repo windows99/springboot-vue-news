@@ -83,10 +83,14 @@ public class NewsController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteNews(@PathVariable Long id) {
         try {
-            newsService.deleteNewsById(id);
-            return ResponseEntity.ok(Map.of("message", "News deleted successfully", "status", 200));
+            boolean result = newsService.deleteNewsById(id);
+            if (result) {
+                return ResponseEntity.ok(Map.of("message", "新闻删除成功", "status", 200));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("message", "新闻删除失败", "status", 400));
+            }
         } catch (Exception e) {
-            log.error("Delete news error: ", e);
+            log.error("删除新闻失败: ", e);
             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", 500));
         }
     }

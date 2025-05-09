@@ -124,6 +124,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponsePageNewsFeedbackVO_ = {
+    code?: number;
+    data?: PageNewsFeedbackVO_;
+    message?: string;
+  };
+
   type BaseResponsePageNewsPushVO_ = {
     code?: number;
     data?: PageNewsPushVO_;
@@ -266,6 +272,13 @@ declare namespace API {
     limit?: number;
   };
 
+  type getPendingFeedbackListUsingGETParams = {
+    /** current */
+    current?: number;
+    /** pageSize */
+    pageSize?: number;
+  };
+
   type getPushRecordDetailUsingGETParams = {
     /** recordId */
     recordId: number;
@@ -379,6 +392,22 @@ declare namespace API {
     reviewNotes?: string;
   };
 
+  type NewsFeedbackVO = {
+    content?: string;
+    createTime?: string;
+    id?: number;
+    isDelete?: number;
+    newsId?: number;
+    newsTitle?: string;
+    reviewNotes?: string;
+    reviewTime?: string;
+    reviewerId?: number;
+    title?: string;
+    updateTime?: string;
+    userId?: number;
+    username?: string;
+  };
+
   type NewsPush = {
     createTime?: string;
     id?: number;
@@ -451,6 +480,19 @@ declare namespace API {
     orders?: OrderItem[];
     pages?: number;
     records?: News[];
+    searchCount?: boolean;
+    size?: number;
+    total?: number;
+  };
+
+  type PageNewsFeedbackVO_ = {
+    countId?: string;
+    current?: number;
+    maxLimit?: number;
+    optimizeCountSql?: boolean;
+    orders?: OrderItem[];
+    pages?: number;
+    records?: NewsFeedbackVO[];
     searchCount?: boolean;
     size?: number;
     total?: number;
