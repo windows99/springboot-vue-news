@@ -145,6 +145,10 @@ public interface UserService extends IService<User> {
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
-
-
+    /**
+     * 获取所有用户的ID列表
+     *
+     * @return 所有用户的ID列表
+     */
+    List<Long> getAllUserIds();
 }

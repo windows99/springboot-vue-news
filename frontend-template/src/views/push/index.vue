@@ -1,598 +1,526 @@
 <template>
   <div class="news-push-container">
+    <!-- 顶部操作栏 -->
     <el-card>
       <template #header>
         <div class="card-header">
-          <span class="header-title">新闻推送管理</span>
-          <div class="button-group">
-            <el-button type="primary" @click="createTimedPush">创建定时推送</el-button>
-            <el-button type="success" @click="createInstantPush">一键推送</el-button>
-            <el-button type="warning" @click="createTargetedPush">定向推送</el-button>
+          <span class="header-title">推送管理</span>
+          <div class="operation-buttons">
+            <el-button type="primary" @click="showSinglePushDialog">单条推送</el-button>
+            <el-button type="success" @click="showBatchPushDialog">批量推送</el-button>
+            <el-button type="warning" @click="showPersonalizedPushDialog">个性化推送</el-button>
           </div>
         </div>
       </template>
 
-      <!-- 推送任务列表 -->
-      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
-        <el-tab-pane label="所有任务" name="all"></el-tab-pane>
-        <el-tab-pane label="待执行" name="pending"></el-tab-pane>
-        <el-tab-pane label="已完成" name="completed"></el-tab-pane>
-        <el-tab-pane label="失败任务" name="failed"></el-tab-pane>
-      </el-tabs>
+      <!-- 查询条件 -->
+      <el-form :model="recordsSearchForm" class="query-form">
+        <el-row :gutter="20">
+          <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4">
+            <el-form-item label="新闻ID">
+              <el-input v-model="recordsSearchForm.newsId" placeholder="请输入新闻ID" clearable />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4">
+            <el-form-item label="推送类型">
+              <el-select v-model="recordsSearchForm.pushType" placeholder="选择推送类型" clearable>
+                <el-option label="即时推送" :value="1" />
+                <el-option label="个性化推送" :value="2" />
+                <el-option label="批量推送" :value="3" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="24" :md="24" :lg="4" :xl="4">
+            <div class="flex gap-2">
+              <el-button type="primary" @click="handleRecordsSearch">查询</el-button>
+              <el-button @click="resetRecordsSearch">重置</el-button>
+            </div>
+          </el-col>
+        </el-row>
+      </el-form>
 
-      <el-table :data="taskList" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="推送标题" width="180" />
-        <el-table-column prop="pushType" label="推送类型" width="120">
-          <template #default="{ row }">
-            <el-tag :type="getPushTypeTag(row.pushType) as '' | 'success' | 'warning' | 'info' | 'danger'">{{ getPushTypeLabel(row.pushType) }}</el-tag>
+      <!-- 推送记录表格 -->
+      <el-table :data="recordsList" v-loading="recordsLoading" style="width: 100%">
+        <el-table-column prop="newsPush.id" label="ID" width="80" />
+        <el-table-column prop="newsId" label="新闻ID" width="180" />
+        <el-table-column prop="newsTitle" label="新闻标题" />
+        <el-table-column label="推送时间" width="180">
+          <template #default="scope">
+            {{ formatDate(scope.row.newsPush.pushTime) }}
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="120">
-          <template #default="{ row }">
-            <el-tag :type="getStatusTag(row.status) as 'success' | 'warning' | 'info' | 'danger'">{{ getStatusLabel(row.status) }}</el-tag>
+        <el-table-column label="推送类型" width="120">
+          <template #default="scope">
+            <el-tag :type="getPushTypeTag(scope.row.newsPush.pushType)">
+              {{ getPushTypeText(scope.row.newsPush.pushType) }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="scheduledTime" label="计划时间" width="180" />
-        <el-table-column prop="createdTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
-          <template #default="{ row }">
-            <el-button 
-              v-if="row.status === 'pending'" 
-              type="success" 
-              size="small" 
-              @click="executePush(row)"
-            >
-              执行
-            </el-button>
-            <el-button 
-              v-if="row.status === 'pending'" 
-              type="danger" 
-              size="small" 
-              @click="cancelPush(row)"
-            >
-              取消
-            </el-button>
-            <el-button 
-              v-if="row.status === 'completed'" 
-              type="primary" 
-              size="small" 
-              @click="viewStatistics(row)"
-            >
-              统计
-            </el-button>
-            <el-button 
-              type="info" 
-              size="small" 
-              @click="viewDetail(row)"
-            >
-              详情
+        <el-table-column label="操作" width="120">
+          <template #default="scope">
+            <el-button size="small" @click="viewRecordDetail(scope.row)" type="primary" text>
+              查看
             </el-button>
           </template>
         </el-table-column>
       </el-table>
 
+      <!-- 分页 -->
       <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @current-change="handlePageChange"
-        />
+        <el-pagination v-model:current-page="recordsSearchForm.current" v-model:page-size="recordsSearchForm.pageSize"
+          :page-sizes="[10, 20, 50, 100]" :total="recordsTotal" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleRecordsSizeChange" @current-change="handleRecordsPageChange" background />
       </div>
     </el-card>
 
-    <!-- 定时推送对话框 -->
-    <el-dialog v-model="timedPushDialogVisible" title="创建定时推送" width="60%">
-      <el-form :model="timedPushForm" label-width="100px">
-        <el-form-item label="推送标题" required>
-          <el-input v-model="timedPushForm.title" placeholder="请输入推送标题" />
-        </el-form-item>
-        <el-form-item label="选择新闻" required>
-          <el-select
-            v-model="timedPushForm.newsIds"
-            multiple
-            filterable
-            placeholder="请选择要推送的新闻"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in newsList"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="推送时间" required>
-          <el-date-picker
-            v-model="timedPushForm.scheduledTime"
-            type="datetime"
-            placeholder="选择推送时间"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="推送内容">
-          <el-input
-            v-model="timedPushForm.content"
-            type="textarea"
-            rows="4"
-            placeholder="请输入推送内容描述"
-          />
+    <!-- 单条推送弹窗 -->
+    <el-dialog v-model="singlePushDialogVisible" title="单条推送" width="500px" destroy-on-close>
+      <el-form :model="singlePushForm" label-width="80px">
+        <el-form-item label="新闻ID">
+          <el-input v-model="singlePushForm.newsId" placeholder="请输入要推送的新闻ID"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="timedPushDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleTimedPushSubmit">确认</el-button>
+          <el-button @click="singlePushDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSinglePush" :loading="singlePushLoading">
+            确认推送
+          </el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- 一键推送对话框 -->
-    <el-dialog v-model="instantPushDialogVisible" title="一键推送" width="60%">
-      <el-form :model="instantPushForm" label-width="100px">
-        <el-form-item label="推送标题" required>
-          <el-input v-model="instantPushForm.title" placeholder="请输入推送标题" />
-        </el-form-item>
-        <el-form-item label="选择新闻" required>
-          <el-select
-            v-model="instantPushForm.newsIds"
-            multiple
-            filterable
-            placeholder="请选择要推送的新闻"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in newsList"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="推送内容">
-          <el-input
-            v-model="instantPushForm.content"
-            type="textarea"
-            rows="4"
-            placeholder="请输入推送内容描述"
-          />
+    <!-- 批量推送弹窗 -->
+    <el-dialog v-model="batchPushDialogVisible" title="批量推送" width="80%" destroy-on-close>
+      <div class="news-list-container">
+        <!-- 查询表单 -->
+        <el-form :model="newsSearchForm" class="query-form">
+          <el-row :gutter="20">
+            <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4">
+              <el-form-item label="新闻标签">
+                <el-select v-model="newsSearchForm.category" placeholder="选择标签" clearable>
+                  <el-option v-for="tag in newsTagList" :key="tag.id" :label="tag.tagname" :value="tag.id" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="24" :lg="4" :xl="4">
+              <div class="flex gap-2">
+                <el-button type="primary" @click="handleNewsSearch">查询</el-button>
+                <el-button @click="resetNewsSearch">重置</el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+
+        <el-table :data="newsList" v-loading="newsLoading" @selection-change="handleNewsSelectionChange"
+          @row-click="handleRowClick" highlight-current-row>
+          <el-table-column type="selection" width="55" />
+          <el-table-column prop="id" label="ID" width="180" />
+          <el-table-column prop="title" label="标题" />
+          <el-table-column prop="author" label="作者" width="120" />
+          <el-table-column prop="category" label="分类" width="120" :formatter="formatCategory" />
+          <el-table-column prop="createtime" label="发布日期" width="180" />
+        </el-table>
+
+        <div class="pagination-container">
+          <el-pagination v-model:current-page="newsCurrentPage" v-model:page-size="newsPageSize"
+            :page-sizes="[10, 20, 50, 100]" :total="newsTotal" layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleNewsSizeChange" @current-change="handleNewsPageChange" background />
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchPushDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleBatchPush" :loading="batchPushLoading">
+            确认推送
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 个性化推送弹窗 -->
+    <el-dialog v-model="personalizedPushDialogVisible" title="个性化推送" width="400px" destroy-on-close>
+      <el-form :model="personalizedPushForm" label-width="80px">
+        <el-form-item label="推送数量">
+          <el-input-number v-model="personalizedPushForm.limit" :min="1" :max="10"></el-input-number>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="instantPushDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleInstantPushSubmit">立即推送</el-button>
+          <el-button @click="personalizedPushDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handlePersonalizedPush" :loading="personalizedPushLoading">
+            确认推送
+          </el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- 定向推送对话框 -->
-    <el-dialog v-model="targetedPushDialogVisible" title="定向推送" width="60%">
-      <el-form :model="targetedPushForm" label-width="100px">
-        <el-form-item label="推送标题" required>
-          <el-input v-model="targetedPushForm.title" placeholder="请输入推送标题" />
-        </el-form-item>
-        <el-form-item label="选择新闻" required>
-          <el-select
-            v-model="targetedPushForm.newsIds"
-            multiple
-            filterable
-            placeholder="请选择要推送的新闻"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in newsList"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="用户角色">
-          <el-select
-            v-model="targetedPushForm.targetUsers.roles"
-            multiple
-            placeholder="按用户角色筛选"
-            style="width: 100%"
-          >
-            <el-option label="管理员" value="admin" />
-            <el-option label="编辑" value="editor" />
-            <el-option label="普通用户" value="user" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="用户标签">
-          <el-select
-            v-model="targetedPushForm.targetUsers.tags"
-            multiple
-            filterable
-            placeholder="按用户标签筛选"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="tag in userTagList"
-              :key="tag.id"
-              :label="tag.name"
-              :value="tag.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="推送时间" required>
-          <el-date-picker
-            v-model="targetedPushForm.scheduledTime"
-            type="datetime"
-            placeholder="选择推送时间"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="推送内容">
-          <el-input
-            v-model="targetedPushForm.content"
-            type="textarea"
-            rows="4"
-            placeholder="请输入推送内容描述"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="targetedPushDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleTargetedPushSubmit">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 统计详情对话框 -->
-    <el-dialog v-model="statisticsDialogVisible" title="推送统计" width="50%">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="推送标题">{{ currentTask?.title }}</el-descriptions-item>
-        <el-descriptions-item label="推送类型">{{ getPushTypeLabel(currentTask?.pushType) }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ currentTask?.createdTime }}</el-descriptions-item>
-        <el-descriptions-item label="执行时间">{{ currentTask?.executedTime }}</el-descriptions-item>
-        <el-descriptions-item label="总推送数">{{ currentTask?.statistics?.total || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="送达数">{{ currentTask?.statistics?.delivered || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="已读数">{{ currentTask?.statistics?.read || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="反馈数">{{ currentTask?.statistics?.feedback || 0 }}</el-descriptions-item>
-      </el-descriptions>
-      <div class="statistics-chart" style="height: 300px; margin-top: 20px;">
-        <!-- 这里可以添加图表组件，如ECharts -->
-        <div>图表区域（后续可集成ECharts）</div>
+    <!-- 推送记录详情弹窗 -->
+    <el-dialog v-model="detailDialogVisible" title="推送详情" width="600px" destroy-on-close>
+      <div v-if="recordDetail" class="record-detail">
+        <div class="detail-item">
+          <span class="label">新闻ID：</span>
+          <span>{{ recordDetail.newsId }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">新闻标题：</span>
+          <span>{{ recordDetail.newsTitle }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">推送类型：</span>
+          <el-tag :type="getPushTypeTag(recordDetail.newsPush.pushType)">
+            {{ getPushTypeText(recordDetail.newsPush.pushType) }}
+          </el-tag>
+        </div>
+        <div class="detail-item">
+          <span class="label">推送时间：</span>
+          <span>{{ formatDate(recordDetail.newsPush.pushTime) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">创建时间：</span>
+          <span>{{ formatDate(recordDetail.newsPush.createTime) }}</span>
+        </div>
+        <div class="detail-item" v-if="recordDetail.newsCoverImage">
+          <span class="label">新闻封面：</span>
+          <img :src="recordDetail.newsCoverImage" class="news-cover" />
+        </div>
       </div>
     </el-dialog>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import {
+  pushBatchUsingPost,
+  pushPersonalizedUsingPost,
+  listPushRecordsUsingGet,
+  getUnreadPushesUsingGet
+} from '@/api/newsPushController'
 import { getNewsListsUsingPost } from '@/api/newsController'
+import { useNewsStore } from "@/store/modules/news"
 
-// 模拟推送类型API
-const getPushTypeTag = (type: string) => {
-  const map: Record<string, '' | 'success' | 'warning' | 'info' | 'danger'> = {
-    'instant': 'success',
-    'timed': '',  // 使用默认样式替代primary
-    'targeted': 'warning'
-  }
-  return map[type] || 'info'
-}
+const newsStore = useNewsStore()
+const newsTagList = newsStore.newsTagList
 
-const getPushTypeLabel = (type: string) => {
-  const map: Record<string, string> = {
-    'instant': '一键推送',
-    'timed': '定时推送',
-    'targeted': '定向推送'
-  }
-  return map[type] || '未知类型'
-}
+// 推送记录相关
+const recordsSearchForm = reactive({
+  current: 1,
+  pageSize: 10,
+  newsId: '',
+  pushType: undefined
+})
+const recordsList = ref([])
+const recordsTotal = ref(0)
+const recordsLoading = ref(false)
 
-const getStatusTag = (status: string) => {
-  const map: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
-    'pending': 'warning',
-    'processing': 'info',
-    'completed': 'success',
-    'failed': 'danger'
-  }
-  return map[status] || 'info'
-}
+// 单条推送相关
+const singlePushDialogVisible = ref(false)
+const singlePushForm = reactive({
+  newsId: ''
+})
+const singlePushLoading = ref(false)
 
-const getStatusLabel = (status: string) => {
-  const map: Record<string, string> = {
-    'pending': '待执行',
-    'processing': '执行中',
-    'completed': '已完成',
-    'failed': '失败'
-  }
-  return map[status] || '未知状态'
-}
-
-// 分页相关
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-const loading = ref(false)
-const activeTab = ref('all')
-
-// 推送任务列表
-const taskList = ref([])
-
-// 新闻列表（用于选择）
+// 批量推送相关
+const batchPushDialogVisible = ref(false)
 const newsList = ref([])
+const newsLoading = ref(false)
+const newsCurrentPage = ref(1)
+const newsPageSize = ref(10)
+const newsTotal = ref(0)
+const selectedNews = ref([])
+const batchPushLoading = ref(false)
 
-// 用户标签列表（模拟数据）
-const userTagList = ref([
-  { id: 1, name: '科技爱好者' },
-  { id: 2, name: '财经关注' },
-  { id: 3, name: '体育迷' },
-  { id: 4, name: '娱乐粉丝' },
-  { id: 5, name: '教育工作者' }
-])
+// 个性化推送相关
+const personalizedPushDialogVisible = ref(false)
+const personalizedPushForm = reactive({
+  limit: 5
+})
+const personalizedPushLoading = ref(false)
 
-// 定时推送表单
-const timedPushDialogVisible = ref(false)
-const timedPushForm = reactive({
-  title: '',
-  content: '',
-  newsIds: [] as number[],
-  scheduledTime: ''
+// 推送记录详情相关
+const detailDialogVisible = ref(false)
+const recordDetail = ref(null)
+
+// 新闻搜索表单
+const newsSearchForm = reactive({
+  category: undefined
 })
 
-// 一键推送表单
-const instantPushDialogVisible = ref(false)
-const instantPushForm = reactive({
-  title: '',
-  content: '',
-  newsIds: [] as number[]
-})
+// 显示单条推送弹窗
+const showSinglePushDialog = () => {
+  singlePushForm.newsId = ''
+  singlePushDialogVisible.value = true
+}
 
-// 定向推送表单
-const targetedPushDialogVisible = ref(false)
-const targetedPushForm = reactive({
-  title: '',
-  content: '',
-  newsIds: [] as number[],
-  scheduledTime: '',
-  targetUsers: {
-    roles: [] as string[],
-    tags: [] as number[]
-  }
-})
+// 显示批量推送弹窗
+const showBatchPushDialog = () => {
+  batchPushDialogVisible.value = true
+  fetchNewsList()
+}
 
-// 统计对话框
-const statisticsDialogVisible = ref(false)
-const currentTask = ref(null)
+// 显示个性化推送弹窗
+const showPersonalizedPushDialog = () => {
+  personalizedPushForm.limit = 5
+  personalizedPushDialogVisible.value = true
+}
 
 // 获取新闻列表
 const fetchNewsList = async () => {
   try {
+    newsLoading.value = true
     const res = await getNewsListsUsingPost({
-      current: 1,
-      pageSize: 100,
-      status: 3 // 已发布状态
+      current: newsCurrentPage.value,
+      pageSize: newsPageSize.value,
+      category: newsSearchForm.category
     })
-    if (res.code === 0 && res.data && res.data.records) {
+    if (res.code === 0) {
       newsList.value = res.data.records
+      newsTotal.value = Number(res.data.total)
+      console.log('新闻列表数据:', {
+        current: newsCurrentPage.value,
+        pageSize: newsPageSize.value,
+        total: newsTotal.value,
+        records: newsList.value
+      })
     }
   } catch (error) {
     console.error('获取新闻列表失败', error)
     ElMessage.error('获取新闻列表失败')
-  }
-}
-
-// 获取推送任务列表（模拟数据）
-const fetchTaskList = async () => {
-  loading.value = true
-  try {
-    // 这里应该调用后端API
-    // 模拟数据
-    const mockData = [
-      {
-        id: 1,
-        title: '周末活动通知',
-        pushType: 'instant',
-        status: 'completed',
-        scheduledTime: null,
-        createdTime: '2023-05-20 10:00:00',
-        executedTime: '2023-05-20 10:00:05',
-        statistics: {
-          total: 100,
-          delivered: 95,
-          read: 80,
-          feedback: 20
-        }
-      },
-      {
-        id: 2,
-        title: '每周热点推送',
-        pushType: 'timed',
-        status: 'pending',
-        scheduledTime: '2023-05-25 08:00:00',
-        createdTime: '2023-05-20 14:30:00',
-        executedTime: null
-      },
-      {
-        id: 3,
-        title: 'VIP用户专享资讯',
-        pushType: 'targeted',
-        status: 'failed',
-        scheduledTime: '2023-05-21 09:00:00',
-        createdTime: '2023-05-20 16:45:00',
-        executedTime: '2023-05-21 09:00:03',
-        statistics: {
-          total: 50,
-          delivered: 30,
-          read: 0,
-          feedback: 0
-        }
-      }
-    ]
-    
-    // 根据当前标签筛选数据
-    if (activeTab.value === 'all') {
-      taskList.value = mockData
-    } else {
-      taskList.value = mockData.filter(task => task.status === activeTab.value)
-    }
-    
-    total.value = taskList.value.length
-  } catch (error) {
-    console.error('获取推送任务列表失败', error)
-    ElMessage.error('获取推送任务列表失败')
   } finally {
-    loading.value = false
+    newsLoading.value = false
   }
 }
 
-// 创建定时推送
-const createTimedPush = () => {
-  timedPushForm.title = ''
-  timedPushForm.content = ''
-  timedPushForm.newsIds = []
-  timedPushForm.scheduledTime = ''
-  timedPushDialogVisible.value = true
+// 处理新闻选择变化
+const handleNewsSelectionChange = (selection) => {
+  selectedNews.value = selection
 }
 
-// 创建一键推送
-const createInstantPush = () => {
-  instantPushForm.title = ''
-  instantPushForm.content = ''
-  instantPushForm.newsIds = []
-  instantPushDialogVisible.value = true
+// 处理新闻列表分页大小变化
+const handleNewsSizeChange = (size) => {
+  newsPageSize.value = size
+  newsCurrentPage.value = 1
+  fetchNewsList()
 }
 
-// 创建定向推送
-const createTargetedPush = () => {
-  targetedPushForm.title = ''
-  targetedPushForm.content = ''
-  targetedPushForm.newsIds = []
-  targetedPushForm.scheduledTime = ''
-  targetedPushForm.targetUsers.roles = []
-  targetedPushForm.targetUsers.tags = []
-  targetedPushDialogVisible.value = true
+// 处理新闻列表页码变化
+const handleNewsPageChange = (page) => {
+  newsCurrentPage.value = page
+  fetchNewsList()
 }
 
-// 提交定时推送
-const handleTimedPushSubmit = async () => {
-  // 表单验证
-  if (!timedPushForm.title || timedPushForm.newsIds.length === 0 || !timedPushForm.scheduledTime) {
-    ElMessage.warning('请填写必填项')
+// 单条推送
+const handleSinglePush = async () => {
+  if (!singlePushForm.newsId) {
+    ElMessage.warning('请输入要推送的新闻ID')
     return
   }
-  
-  try {
-    // 这里应该调用后端API
-    console.log('提交定时推送', timedPushForm)
-    ElMessage.success('创建定时推送成功')
-    timedPushDialogVisible.value = false
-    fetchTaskList()
-  } catch (error) {
-    console.error('创建定时推送失败', error)
-    ElMessage.error('创建定时推送失败')
-  }
-}
 
-// 提交一键推送
-const handleInstantPushSubmit = async () => {
-  // 表单验证
-  if (!instantPushForm.title || instantPushForm.newsIds.length === 0) {
-    ElMessage.warning('请填写必填项')
-    return
-  }
-  
   try {
-    // 这里应该调用后端API
-    console.log('提交一键推送', instantPushForm)
-    ElMessage.success('一键推送成功')
-    instantPushDialogVisible.value = false
-    fetchTaskList()
-  } catch (error) {
-    console.error('一键推送失败', error)
-    ElMessage.error('一键推送失败')
-  }
-}
-
-// 提交定向推送
-const handleTargetedPushSubmit = async () => {
-  // 表单验证
-  if (!targetedPushForm.title || targetedPushForm.newsIds.length === 0 || !targetedPushForm.scheduledTime) {
-    ElMessage.warning('请填写必填项')
-    return
-  }
-  
-  try {
-    // 这里应该调用后端API
-    console.log('提交定向推送', targetedPushForm)
-    ElMessage.success('创建定向推送成功')
-    targetedPushDialogVisible.value = false
-    fetchTaskList()
-  } catch (error) {
-    console.error('创建定向推送失败', error)
-    ElMessage.error('创建定向推送失败')
-  }
-}
-
-// 执行推送
-const executePush = async (row: any) => {
-  try {
-    await ElMessageBox.confirm('确定要立即执行此推送任务吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+    singlePushLoading.value = true
+    const res = await pushBatchUsingPost({
+      newsIds: [singlePushForm.newsId]
     })
-    // 这里应该调用后端API
-    console.log('执行推送', row)
-    ElMessage.success('推送任务已执行')
-    fetchTaskList()
+    if (res.code === 0) {
+      ElMessage.success('推送成功')
+      singlePushDialogVisible.value = false
+      loadPushRecords()
+    }
   } catch (error) {
-    console.log('取消执行')
+    console.error('推送错误', error)
+    ElMessage.error('推送失败')
+  } finally {
+    singlePushLoading.value = false
   }
 }
 
-// 取消推送
-const cancelPush = async (row: any) => {
+// 批量推送
+const handleBatchPush = async () => {
+  if (selectedNews.value.length === 0) {
+    ElMessage.warning('请选择要推送的新闻')
+    return
+  }
+
   try {
-    await ElMessageBox.confirm('确定要取消此推送任务吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+    batchPushLoading.value = true
+    const newsIds = selectedNews.value.map(news => news.id)
+    const res = await pushBatchUsingPost({
+      newsIds: newsIds
     })
-    // 这里应该调用后端API
-    console.log('取消推送', row)
-    ElMessage.success('推送任务已取消')
-    fetchTaskList()
+    if (res.code === 0) {
+      ElMessage.success(`成功推送${res.data}条新闻`)
+      batchPushDialogVisible.value = false
+      loadPushRecords()
+    }
   } catch (error) {
-    console.log('取消操作')
+    console.error('批量推送错误', error)
+    ElMessage.error('批量推送失败')
+  } finally {
+    batchPushLoading.value = false
   }
 }
 
-// 查看统计
-const viewStatistics = (row: any) => {
-  currentTask.value = row
-  statisticsDialogVisible.value = true
+// 个性化推送
+const handlePersonalizedPush = async () => {
+  try {
+    personalizedPushLoading.value = true
+    const res = await pushPersonalizedUsingPost({
+      limit: personalizedPushForm.limit
+    })
+    if (res.code === 0) {
+      if (res.data > 0) {
+        ElMessage.success(`成功推送${res.data}条个性化新闻`)
+      } else {
+        ElMessage.info('没有找到符合您兴趣的新闻')
+      }
+      personalizedPushDialogVisible.value = false
+      loadPushRecords()
+    }
+  } catch (error) {
+    console.error('个性化推送错误', error)
+    ElMessage.error('个性化推送失败')
+  } finally {
+    personalizedPushLoading.value = false
+  }
 }
 
-// 查看详情
-const viewDetail = (row: any) => {
-  currentTask.value = row
-  // 这里可以跳转到详情页面或显示详情对话框
-  console.log('查看详情', row)
+// 查询推送记录
+const loadPushRecords = async () => {
+  try {
+    recordsLoading.value = true
+    const res = await listPushRecordsUsingGet({
+      params: {
+        current: recordsSearchForm.current,
+        pageSize: recordsSearchForm.pageSize,
+        newsId: recordsSearchForm.newsId,
+        pushType: recordsSearchForm.pushType
+      }
+    })
+    if (res.code === 0) {
+      recordsList.value = res.data.records
+      recordsTotal.value = Number(res.data.total)
+      console.log('推送记录数据:', {
+        current: recordsSearchForm.current,
+        pageSize: recordsSearchForm.pageSize,
+        total: recordsTotal.value,
+        records: recordsList.value
+      })
+    }
+  } catch (error) {
+    console.error('加载推送记录错误', error)
+    ElMessage.error('获取推送记录失败')
+  } finally {
+    recordsLoading.value = false
+  }
 }
 
-// 标签页切换
-const handleTabClick = () => {
-  fetchTaskList()
+// 处理推送记录查询
+const handleRecordsSearch = () => {
+  recordsSearchForm.current = 1
+  loadPushRecords()
 }
 
-// 分页切换
-const handlePageChange = () => {
-  fetchTaskList()
+// 重置推送记录查询
+const resetRecordsSearch = () => {
+  recordsSearchForm.current = 1
+  recordsSearchForm.newsId = ''
+  recordsSearchForm.pushType = undefined
+  loadPushRecords()
+}
+
+// 处理推送记录分页大小变化
+const handleRecordsSizeChange = (size) => {
+  recordsSearchForm.pageSize = size
+  recordsSearchForm.current = 1
+  loadPushRecords()
+}
+
+// 处理推送记录页码变化
+const handleRecordsPageChange = (page) => {
+  recordsSearchForm.current = page
+  loadPushRecords()
+}
+
+// 查看推送记录详情
+const viewRecordDetail = (record) => {
+  recordDetail.value = record
+  detailDialogVisible.value = true
+}
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 获取推送类型文本
+const getPushTypeText = (type) => {
+  const types = {
+    1: '即时推送',
+    2: '个性化推送',
+    3: '批量推送'
+  }
+  return types[type] || '未知类型'
+}
+
+// 获取推送类型对应的标签类型
+const getPushTypeTag = (type) => {
+  const tags = {
+    1: 'primary',
+    2: 'success',
+    3: 'warning'
+  }
+  return tags[type] || 'info'
+}
+
+// 格式化分类
+const formatCategory = (row) => {
+  const tag = newsTagList.find(item => item.id === row.category)
+  return tag ? tag.tagname : '-'
+}
+
+// 处理新闻搜索
+const handleNewsSearch = () => {
+  newsCurrentPage.value = 1
+  fetchNewsList()
+}
+
+// 重置新闻搜索
+const resetNewsSearch = () => {
+  newsSearchForm.category = undefined
+  newsCurrentPage.value = 1
+  fetchNewsList()
+}
+
+// 修改行点击处理方法
+const handleRowClick = (row) => {
+  const index = selectedNews.value.findIndex(item => item.id === row.id)
+  if (index === -1) {
+    selectedNews.value.push(row)
+  } else {
+    selectedNews.value.splice(index, 1)
+  }
+  // 更新表格选中状态
+  const tableRef = document.querySelector('.news-list-container .el-table')
+  if (tableRef) {
+    const checkbox = tableRef.querySelector(`tr[data-row-key="${row.id}"] .el-checkbox__input`)
+    if (checkbox) {
+      checkbox.click()
+    }
+  }
 }
 
 onMounted(() => {
-  fetchNewsList()
-  fetchTaskList()
+  loadPushRecords()
 })
 </script>
 
@@ -608,18 +536,85 @@ onMounted(() => {
 }
 
 .header-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
 }
 
-.button-group {
+.operation-buttons {
   display: flex;
   gap: 10px;
+}
+
+.query-form {
+  margin-bottom: 20px;
+}
+
+.flex {
+  display: flex;
+}
+
+.gap-2 {
+  gap: 8px;
 }
 
 .pagination-container {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  padding: 10px 0;
 }
-</style> 
+
+.news-list-container {
+  padding: 0;
+}
+
+.record-detail {
+  padding: 20px;
+}
+
+.detail-item {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.detail-item .label {
+  font-weight: bold;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.news-cover {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: normal;
+}
+
+:deep(.el-table) {
+  margin-top: 10px;
+}
+
+:deep(.el-card__header) {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+:deep(.el-card__body) {
+  padding: 20px;
+}
+</style>

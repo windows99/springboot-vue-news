@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket推送测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .section-title {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.disconnect {
+            background-color: #f44336;
+        }
+        button.disconnect:hover {
+            background-color: #d32f2f;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.connected {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .status.disconnected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .message-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .message.received {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+        .message.sent {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            text-align: right;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        .message-content {
+            word-break: break-all;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket推送测试</h1>
+        
+        <div class="section">
+            <h3 class="section-title">WebSocket连接</h3>
+            <div class="input-group">
+                <label for="userId">用户ID</label>
+                <input type="text" id="userId" placeholder="请输入用户ID">
+            </div>
+            <div>
+                <button onclick="connect()">建立连接</button>
+                <button class="disconnect" onclick="disconnect()">断开连接</button>
+            </div>
+            <div id="status" class="status disconnected">未连接</div>
+        </div>
+        
+        <div class="section">
+            <h3 class="section-title">消息推送测试</h3>
+            <div class="input-group">
+                <label for="newsId">新闻ID</label>
+                <input type="text" id="newsId" placeholder="请输入新闻ID">
+            </div>
+            <button onclick="testPush()">测试推送</button>
+        </div>
+        
+        <div class="section">
+            <h3 class="section-title">消息列表</h3>
+            <div id="messageBox" class="message-box"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        const messageBox = document.getElementById('messageBox');
+        const statusDiv = document.getElementById('status');
+
+        // 连接WebSocket
+        function connect() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                alert('请输入用户ID');
+                return;
+            }
+
+            // 如果已连接，先断开
+            if (ws) {
+                ws.close();
+            }
+
+            // 创建WebSocket连接
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/api/websocket/${userId}`;
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                // 连接建立时的回调
+                ws.onopen = function() {
+                    statusDiv.className = 'status connected';
+                    statusDiv.textContent = '已连接';
+                    addMessage('系统', 'WebSocket连接已建立', 'received');
+                    console.log('WebSocket连接已建立');
+                };
+                
+                // 接收消息的回调
+                ws.onmessage = function(event) {
+                    console.log('收到消息:', event.data);
+                    try {
+                        const message = JSON.parse(event.data);
+                        addMessage('服务器', formatJSON(message), 'received');
+                    } catch (e) {
+                        addMessage('服务器', event.data, 'received');
+                    }
+                };
+                
+                // 连接关闭的回调
+                ws.onclose = function() {
+                    statusDiv.className = 'status disconnected';
+                    statusDiv.textContent = '已断开连接';
+                    addMessage('系统', 'WebSocket连接已关闭', 'received');
+                    console.log('WebSocket连接已关闭');
+                    ws = null;
+                };
+                
+                // 发生错误时的回调
+                ws.onerror = function(error) {
+                    statusDiv.className = 'status disconnected';
+                    statusDiv.textContent = '连接错误';
+                    addMessage('系统', '连接发生错误', 'received');
+                    console.error('WebSocket错误:', error);
+                };
+            } catch (error) {
+                console.error('创建WebSocket连接失败:', error);
+                alert('创建WebSocket连接失败: ' + error.message);
+            }
+        }
+
+        // 断开WebSocket连接
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        // 测试推送
+        function testPush() {
+            const newsId = document.getElementById('newsId').value;
+            if (!newsId) {
+                alert('请输入新闻ID');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                alert('请先连接WebSocket');
+                return;
+            }
+
+            // 发送测试推送请求
+            fetch('/api/websocket/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    newsId: newsId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('推送响应:', data);
+                if (data.code === 0) {
+                    addMessage('系统', '推送请求已发送', 'sent');
+                } else {
+                    addMessage('系统', '推送请求失败: ' + data.message, 'received');
+                }
+            })
+            .catch(error => {
+                console.error('请求失败:', error);
+                addMessage('系统', '请求失败: ' + error.message, 'received');
+            });
+        }
+
+        // 添加消息到消息框
+        function addMessage(sender, content, type) {
+            const time = new Date().toLocaleTimeString();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = `${time} - ${sender}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (typeof content === 'object') {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(content, null, 2);
+                contentDiv.appendChild(pre);
+            } else if (content.startsWith('{') && content.endsWith('}')) {
+                try {
+                    const jsonObj = JSON.parse(content);
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(jsonObj, null, 2);
+                    contentDiv.appendChild(pre);
+                } catch (e) {
+                    contentDiv.textContent = content;
+                }
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(timeDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            messageBox.appendChild(messageDiv);
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+
+        // 格式化JSON
+        function formatJSON(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+    </script>
+</body>
+</html> 

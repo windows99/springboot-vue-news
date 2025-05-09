@@ -3,6 +3,7 @@ package com.guanzhi.springbootinit.service.impl;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.common.ErrorCode;
@@ -394,5 +395,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 sortField);
         System.out.println(queryWrapper);
         return queryWrapper;
+    }
+
+    @Override
+    public List<Long> getAllUserIds() {
+        // 查询所有非逻辑删除的用户
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getIsDelete, 0)
+                   .select(User::getId);
+        
+        // 只提取用户ID
+        List<User> userList = this.list(queryWrapper);
+        return userList.stream()
+                .map(User::getId)
+                .collect(Collectors.toList());
     }
 }

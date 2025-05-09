@@ -52,7 +52,7 @@
 
       <el-table :data="tableData" style="width: 100%">
         <el-table-column prop="id" label="ID" width="200" />
-        <el-table-column prop="title" label="标题" width="200" />
+        <el-table-column prop="title" label="标题" />
         <el-table-column prop="author" label="作者" width="120" />
         <el-table-column prop="category" label="分类" width="120" :formatter="formatCategory" />
         <el-table-column prop="createtime" label="发布日期" width="180" />

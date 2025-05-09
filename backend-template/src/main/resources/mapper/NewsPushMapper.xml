@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.guanzhi.springbootinit.mapper.NewsPushMapper">
+
+    <resultMap id="BaseResultMap" type="com.guanzhi.springbootinit.model.entity.NewsPush">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="newsId" column="newsId" jdbcType="BIGINT"/>
+        <result property="pushTime" column="pushTime" jdbcType="TIMESTAMP"/>
+        <result property="pushType" column="pushType" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="isRead" column="isRead" jdbcType="INTEGER"/>
+        <result property="readTime" column="readTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="INTEGER"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, userId, newsId,
+        pushTime, pushType, status,
+        isRead, readTime, isDelete,
+        createTime, updateTime
+    </sql>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO news_push (
+            userId, newsId, pushTime, pushType, 
+            status, isRead, readTime, isDelete, createTime, updateTime
+        ) VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.userId}, #{item.newsId}, #{item.pushTime}, #{item.pushType},
+                #{item.status}, #{item.isRead}, #{item.readTime}, #{item.isDelete}, 
+                NOW(), NOW()
+            )
+        </foreach>
+    </insert>
+
+    <select id="getRecentViewedNewsIds" resultType="java.lang.Long">
+        SELECT DISTINCT v.newsId 
+        FROM user_news_view v 
+        JOIN news n ON v.newsId = n.id 
+        WHERE v.userId = #{userId} 
+        AND n.isDelete = 0 
+        AND n.status IN (1, 2, 3)  <!-- 放宽状态条件，包括待审核、审核中、已发布 -->
+        ORDER BY v.viewTime DESC 
+        LIMIT #{limit}
+    </select>
+
+</mapper> 

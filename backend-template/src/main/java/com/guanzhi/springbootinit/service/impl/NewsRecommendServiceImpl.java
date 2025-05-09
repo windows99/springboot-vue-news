@@ -38,7 +38,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
     private UserSubscriptionMapper userSubscriptionMapper;
 
     @Override
-    public Page<NewsRecommendDTO> getPersonalizedNewsPage(Long userId, long current, long pageSize) {
+    public Page<News> getPersonalizedNewsPage(Long userId, long current, long pageSize) {
         // 获取所有状态为3的新闻总数
         LambdaQueryWrapper<News> countWrapper = new LambdaQueryWrapper<>();
         countWrapper.eq(News::getStatus, 3).eq(News::getIsdelete, 0);  // 只统计状态为3的新闻总数
@@ -87,19 +87,14 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
             sortedNews = sortedNews.subList(0, (int)pageSize);
         }
         
-        // 转换为DTO
-        Page<NewsRecommendDTO> dtoPage = new Page<>();
-        dtoPage.setTotal(total);
-        dtoPage.setCurrent(current);
-        dtoPage.setSize(pageSize);
+        // 构建返回结果
+        Page<News> resultPage = new Page<>();
+        resultPage.setTotal(total);
+        resultPage.setCurrent(current);
+        resultPage.setSize(pageSize);
+        resultPage.setRecords(sortedNews);
         
-        List<NewsRecommendDTO> dtoList = sortedNews.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        
-        dtoPage.setRecords(dtoList);
-        
-        return dtoPage;
+        return resultPage;
     }
 
     /**
@@ -114,10 +109,10 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
     /**
      * 为新用户提供混合推荐（热门+最新）
      */
-    private Page<NewsRecommendDTO> getMixedRecommendations(long current, long pageSize) {
+    private Page<News> getMixedRecommendations(long current, long pageSize) {
         // 获取一半热门新闻
         int halfSize = (int) (pageSize / 2);
-        List<NewsRecommendDTO> hotNews = getHotNews(halfSize);
+        List<News> hotNews = getHotNews(halfSize);
         
         // 获取一半最新新闻
         LambdaQueryWrapper<News> queryWrapper = new LambdaQueryWrapper<>();
@@ -127,20 +122,17 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
                    .last("LIMIT " + halfSize);
         
         List<News> latestNews = newsMapper.selectList(queryWrapper);
-        List<NewsRecommendDTO> latestNewsDTOs = latestNews.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
         
         // 合并结果
-        List<NewsRecommendDTO> mixedResults = new ArrayList<>();
+        List<News> mixedResults = new ArrayList<>();
         mixedResults.addAll(hotNews);
         // 过滤掉已经在热门列表中的新闻
         Set<Long> hotNewsIds = hotNews.stream()
-                .map(NewsRecommendDTO::getId)
+                .map(News::getId)
                 .collect(Collectors.toSet());
         
-        latestNewsDTOs.stream()
-                .filter(dto -> !hotNewsIds.contains(dto.getId()))
+        latestNews.stream()
+                .filter(news -> !hotNewsIds.contains(news.getId()))
                 .forEach(mixedResults::add);
         
         // 如果总数超过pageSize，截取前pageSize条
@@ -149,13 +141,13 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         }
         
         // 构建返回结果
-        Page<NewsRecommendDTO> dtoPage = new Page<>();
-        dtoPage.setTotal(mixedResults.size());
-        dtoPage.setCurrent(current);
-        dtoPage.setSize(pageSize);
-        dtoPage.setRecords(mixedResults);
+        Page<News> resultPage = new Page<>();
+        resultPage.setTotal(mixedResults.size());
+        resultPage.setCurrent(current);
+        resultPage.setSize(pageSize);
+        resultPage.setRecords(mixedResults);
         
-        return dtoPage;
+        return resultPage;
     }
 
     /**
@@ -184,7 +176,7 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
     }
 
     @Override
-    public Page<NewsRecommendDTO> getHotNewsPage(long current, long pageSize) {
+    public Page<News> getHotNewsPage(long current, long pageSize) {
         // 获取所有状态为3的新闻总数
         LambdaQueryWrapper<News> countWrapper = new LambdaQueryWrapper<>();
         countWrapper.eq(News::getStatus, 3).eq(News::getIsdelete, 0);
@@ -200,23 +192,11 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
         // 执行分页查询
         Page<News> newsPage = newsMapper.selectPage(new Page<>(current, pageSize), queryWrapper);
         
-        // 转换为DTO
-        Page<NewsRecommendDTO> dtoPage = new Page<>();
-        dtoPage.setTotal(total);
-        dtoPage.setCurrent(current);
-        dtoPage.setSize(pageSize);
-        
-        List<NewsRecommendDTO> dtoList = newsPage.getRecords().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-        
-        dtoPage.setRecords(dtoList);
-        
-        return dtoPage;
+        return newsPage;
     }
 
     @Override
-    public List<NewsRecommendDTO> getPersonalizedNews(Long userId, Integer limit) {
+    public List<News> getPersonalizedNews(Long userId, Integer limit) {
         // 检查用户是否有浏览历史
         boolean hasUserHistory = hasUserHistory(userId);
         
@@ -257,14 +237,11 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
             sortedNews = sortedNews.subList(0, limit);
         }
         
-        // 转换为DTO
-        return sortedNews.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return sortedNews;
     }
 
     @Override
-    public List<NewsRecommendDTO> getHotNews(Integer limit) {
+    public List<News> getHotNews(Integer limit) {
         // 构建查询条件
         LambdaQueryWrapper<News> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(News::getStatus, 3)
@@ -274,40 +251,9 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
                    .last("LIMIT " + limit);
         
         // 执行查询
-        List<News> newsList = newsMapper.selectList(queryWrapper);
-        
-        // 转换为DTO
-        return newsList.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return newsMapper.selectList(queryWrapper);
     }
 
-    /**
-     * 将News实体转换为NewsRecommendDTO
-     */
-    private NewsRecommendDTO convertToDTO(News news) {
-        NewsRecommendDTO dto = new NewsRecommendDTO();
-        BeanUtils.copyProperties(news, dto);
-        
-        // 设置分类名称
-        if (news.getCategory() != null) {
-            try {
-                // 查询真实的分类名称
-                NewsTag tag = newsTagMapper.selectById(news.getCategory());
-                if (tag != null) {
-                    dto.setCategoryName(tag.getTagname());
-                } else {
-                    dto.setCategoryName("未知分类");
-                }
-            } catch (Exception e) {
-                log.error("获取分类名称失败: {}", e.getMessage());
-                dto.setCategoryName("分类" + news.getCategory());
-            }
-        }
-        
-        return dto;
-    }
-    
     /**
      * 获取用户的订阅分类
      */
@@ -403,8 +349,8 @@ public class NewsRecommendServiceImpl implements NewsRecommendService {
             
             // 4. 内容流行度得分 - 流行内容一般较有价值
             score += Math.log10(news.getViewcount() + 1) * 0.5; // 使用对数函数平滑化，避免高流行度项目过度主导
-            score += Math.log10(news.getLikecount() + 1) * 0.8; // 点赞比浏览更能表达质量
-            score += Math.log10(news.getCommentcount() + 1) * 0.6; // 评论互动也是重要指标
+            score += Math.log10(news.getLikeCount() + 1) * 0.8; // 点赞比浏览更能表达质量
+            score += Math.log10(news.getCommentCount() + 1) * 0.6; // 评论互动也是重要指标
             
             // 5. 时效性得分 - 新鲜内容权重较高
             if (news.getCreatetime() != null) {

@@ -21,5 +21,6 @@ export default {
         showLink: VITE_HIDE_HOME !== "true"
       }
     }
+   
   ]
 } as RouteConfigsTable;

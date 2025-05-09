@@ -13,7 +13,7 @@
           <el-carousel height="600px" :interval="5000" arrow="always">
             <el-carousel-item v-for="item in carouselItems" :key="item.id">
               <div class="carousel-container" @click="viewDetail(item.id)">
-                <img :src="item.coverimage" :alt="item.title" class="carousel-image" />
+                <img :src="item.coverImage" :alt="item.title" class="carousel-image" />
                 <div class="carousel-title">
                   <el-text class="title-text" line-clamp="1" size="large">{{ item.title }}</el-text>
                 </div>
@@ -32,7 +32,7 @@
                     <el-row>
                       <!-- 左侧图片 -->
                       <el-col :span="4">
-                        <el-image :src="news.coverimage" fit="cover" :preview-src-list="[news.coverimage]"
+                        <el-image :src="news.coverImage" fit="cover" :preview-src-list="[news.coverImage]"
                           @load="(e) => handleImageLoad(e, news)" ref="newsImage" />
                       </el-col>
 

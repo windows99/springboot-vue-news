@@ -12,12 +12,12 @@
             <el-row>
               <!-- 左侧图片 -->
               <el-col :span="4">
-                <el-image :src="news.coverimage" fit="cover" :preview-src-list="[news.coverimage]" />
+                <el-image :src="news.coverImage" fit="cover" :preview-src-list="[news.coverImage]" />
               </el-col>
 
               <!-- 右侧内容 -->
               <el-col :span="20" class="news-content">
-                <el-text @click="viewDetail(news.id)" class="hover-title" line-clamp="1" size="large">
+                <el-text @click="viewDetail(news.id || news.newsId)" class="hover-title" line-clamp="1" size="large">
                   {{ news.title }}
                 </el-text>
                 <br />
@@ -52,26 +52,27 @@
 import { onMounted, ref, computed, onBeforeUnmount, h } from 'vue'
 // import { getNewsListsUsingPost } from "@/api/newsController"
 
-import { getPersonalRecommendUsingGet, getRecommendForUserUsingGet, getHotNewsUsingGet } from "@/api/newsRecommendController"
+import { getRecommendForUserUsingGet, getHotNewsUsingGet } from "@/api/newsRecommendController"
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 import { useUserStoreHook } from '../stores/modules/user'
 import { ElNotification, ElButton } from 'element-plus'
+import { useNewsStore } from '../stores/modules/news'
 
 const useUserStore = useUserStoreHook()
 const route = useRouter()
+const newsStore = useNewsStore()
 
-
-const newsList = ref<Object[]>([])
-const currentPage = ref<Number>(1)
-const totalPages = ref<Number>(0)
-const loading = ref<Boolean>(false)
-
+// 使用store中的新闻列表
+const newsList = computed(() => newsStore.currentNewsList)
+const currentPage = computed(() => newsStore.currentPage)
+const totalPages = computed(() => newsStore.totalPages)
+const loading = ref(false)
 
 const noMore = computed(() => {
   if (newsList.value.length === 0) return false
-  return currentPage.value >= totalPages.value
+  return Number(currentPage.value) >= Number(totalPages.value)
 })
 
 // 获取新闻列表
@@ -83,6 +84,7 @@ const fetchData = async (category, isLoadMore = false) => {
     let params = {
       current: currentPage.value,
       pageSize: 10,
+      pages: totalPages.value // 添加总页数参数
     }
     let res = null
     if (useUserStore.user.id) {
@@ -93,12 +95,8 @@ const fetchData = async (category, isLoadMore = false) => {
       res = await getHotNewsUsingGet(params)
     }
     if (res.code == 0) {
-      if (isLoadMore) {
-        newsList.value.push(...res.data.records)
-      } else {
-        newsList.value = res.data.records
-      }
-      totalPages.value = res.data.size
+      // 使用store更新新闻列表，确保转换为数字类型
+      newsStore.setNewsList(res.data.records, Number(res.data.current), Number(res.data.pages))
     }
   } finally {
     loading.value = false
@@ -127,7 +125,7 @@ const htmlToText = (html) => {
 
 // 加载更多新闻
 const loadMore = () => {
-  currentPage.value += 1
+  newsStore.currentPage = Number(newsStore.currentPage) + 1
   fetchData(1, true)
 }
 
@@ -146,42 +144,41 @@ const websocket = ref<WebSocket | null>(null)
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
-  fetchData(1)
+  // 如果store中没有数据，才重新获取
+  if (newsStore.currentNewsList.length === 0) {
+    fetchData(1)
+  }
 
   // 建立WebSocket连接
   if (useUserStore.user.id) {
-    const wsUrl = `ws://localhost:8101/api/websocket/news/${useUserStore.user.id}`
+    const wsUrl = `ws://localhost:8101/api/websocket/${useUserStore.user.id}`
     websocket.value = new WebSocket(wsUrl)
 
     websocket.value.onmessage = (event) => {
-
       const newNews = JSON.parse(event.data)
-      if (newNews.type === 2) {
+      console.log(newNews)
+      if (newNews.type === 3) {
         const checked = ref<boolean | string | number>(false)
         const notification = ElNotification({
           title: '您有新的推送，是否加载？',
           offset: 60,
-          // Should pass a function if VNode contains dynamic props
           message: () =>
-            [h(ElButton, {
-              type: 'primary',
-              onClick: (e) => {
-                // 将新新闻添加到列表最前面
-                newsList.value.unshift(...newNews.data)
-                notification.close()
-              }
-            },
-              '加载'
-            ), h(ElButton, {
-              type: 'danger',
-              onClick: (e) => {
-                // 将新新闻添加到列表最前面
-                notification.close()
-              }
-            },
-              '取消'
-            )]
-
+            h('div', [
+              h(ElButton, {
+                type: 'primary',
+                onClick: (e) => {
+                  // 将新新闻添加到store中
+                  newsStore.addPushedNews(newNews.dataList)
+                  notification.close()
+                }
+              }, '加载'),
+              h(ElButton, {
+                type: 'danger',
+                onClick: (e) => {
+                  notification.close()
+                }
+              }, '取消')
+            ])
         })
       }
     }
@@ -198,6 +195,7 @@ onBeforeUnmount(() => {
   if (websocket.value) {
     websocket.value.close()
   }
+  // 不要清空store中的数据，这样返回时数据还在
 })
 </script>
 

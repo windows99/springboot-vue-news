@@ -35,6 +35,7 @@ public class News implements Serializable {
     /**
      * 封面图片
      */
+    @TableField("coverimage")
     private String coverImage;
 
     /**
@@ -84,134 +85,6 @@ public class News implements Serializable {
 
     @TableField("isDelete")
     private Integer isdelete;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getCoverimage() {
-        return coverImage;
-    }
-
-    public void setCoverimage(String coverImage) {
-        this.coverImage = coverImage;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getSourceurl() {
-        return sourceUrl;
-    }
-
-    public void setSourceurl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public Long getCategory() {
-        return category;
-    }
-
-    public void setCategory(Long category) {
-        this.category = category;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Integer getViewcount() {
-        return viewcount;
-    }
-
-    public void setViewcount(Integer viewcount) {
-        this.viewcount = viewcount;
-    }
-
-    public Integer getLikecount() {
-        return likeCount;
-    }
-
-    public void setLikecount(Integer likeCount) {
-        this.likeCount = likeCount;
-    }
-
-    public Integer getCommentcount() {
-        return commentCount;
-    }
-
-    public void setCommentcount(Integer commentCount) {
-        this.commentCount = commentCount;
-    }
-
-    public Date getCreatetime() {
-        return createtime;
-    }
-
-    public void setCreatetime(Date createtime) {
-        this.createtime = createtime;
-    }
-
-    public Date getUpdatetime() {
-        return updateTime;
-    }
-
-    public void setUpdatetime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Integer getIsdelete() {
-        return isdelete;
-    }
-
-    public void setIsdelete(Integer isdelete) {
-        this.isdelete = isdelete;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
 
 
 }
