@@ -9,7 +9,7 @@ export async function getRecommendForUserUsingGet(
   options?: { [key: string]: any }
 ) {
   const { userId: param0, ...queryParams } = params;
-  return request<API.BaseResponsePageNewsRecommendDTO_>(
+  return request<API.BaseResponsePageNews_>(
     `/api/news/recommend/forUser/${param0}`,
     {
       method: "GET",
@@ -31,52 +31,15 @@ export async function getHotNewsUsingGet(
   params: API.getHotNewsUsingGETParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponsePageNewsRecommendDTO_>(
-    "/api/news/recommend/hot",
-    {
-      method: "GET",
-      params: {
-        // current has a default value: 1
-        current: "1",
-        // pageSize has a default value: 10
-        pageSize: "10",
-        ...params
-      },
-      ...(options || {})
-    }
-  );
-}
-
-/** pushNews POST /api/news/recommend/push */
-export async function pushNewsUsingPost(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.pushNewsUsingPOSTParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.BaseResponseBoolean_>("/api/news/recommend/push", {
-    method: "POST",
+  return request<API.BaseResponsePageNews_>("/api/news/recommend/hot", {
+    method: "GET",
     params: {
+      // current has a default value: 1
+      current: "1",
+      // pageSize has a default value: 10
+      pageSize: "10",
       ...params
     },
     ...(options || {})
   });
-}
-
-/** testWebSocket GET /api/news/recommend/test-ws/${param0} */
-export async function testWebSocketUsingGet(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.testWebSocketUsingGETParams,
-  options?: { [key: string]: any }
-) {
-  const { userId: param0, ...queryParams } = params;
-  return request<API.BaseResponseBoolean_>(
-    `/api/news/recommend/test-ws/${param0}`,
-    {
-      method: "GET",
-      params: {
-        ...queryParams
-      },
-      ...(options || {})
-    }
-  );
 }

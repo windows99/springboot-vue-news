@@ -84,7 +84,6 @@ const fetchData = async (category, isLoadMore = false) => {
     let params = {
       current: currentPage.value,
       pageSize: 10,
-      pages: totalPages.value // 添加总页数参数
     }
     let res = null
     if (useUserStore.user.id) {

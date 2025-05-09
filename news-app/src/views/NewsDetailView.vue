@@ -32,10 +32,10 @@
               <el-button type="primary" :icon="Star" @click="handleLike" round>
                 点赞 {{ news.likecount || 0 }}
               </el-button>
-              <el-button type="success" :icon="Share" @click="handleShare" round>
+              <el-button type="success" :icon="Share" @click="showShareDialog" round>
                 分享
               </el-button>
-              <el-button type="warning" :icon="WarningFilled" @click="handleWarningFilled" round>
+              <el-button type="warning" :icon="WarningFilled" @click="showFeedbackDialog" round>
                 反馈
               </el-button>
             </el-space>
@@ -80,20 +80,82 @@
       </el-row>
     </el-main>
   </el-container>
+
+  <!-- 分享对话框 -->
+  <el-dialog
+    v-model="shareDialogVisible"
+    title="分享文章"
+    width="300px"
+    center
+  >
+    <div class="share-dialog-content">
+      <div class="qrcode-container">
+        <div ref="qrcodeRef"></div>
+      </div>
+      <div class="share-tips">
+        <p>扫描二维码分享到：</p>
+        <div class="share-platforms">
+          <el-button type="primary" plain @click="copyLink">
+            <el-icon><Link /></el-icon>
+            复制链接
+          </el-button>
+          <el-button type="success" plain @click="shareToWeChat">
+            <el-icon><ChatDotRound /></el-icon>
+            微信
+          </el-button>
+          <el-button type="info" plain @click="shareToQQ">
+            <el-icon><ChatLineRound /></el-icon>
+            QQ
+          </el-button>
+        </div>
+      </div>
+    </div>
+  </el-dialog>
+
+  <!-- 反馈对话框 -->
+  <el-dialog
+    v-model="feedbackDialogVisible"
+    title="问题反馈"
+    width="400px"
+    center
+  >
+    <el-form :model="feedbackForm" label-width="80px">
+      <el-form-item label="反馈内容">
+        <el-input
+          v-model="feedbackForm.content"
+          type="textarea"
+          :rows="4"
+          placeholder="请详细描述您遇到的问题..."
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="feedbackDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitFeedback">
+          提交反馈
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+  <el-backtop :right="100" :bottom="100" />
   <FooterBar />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, h } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import FooterBar from '../components/FooterBar.vue'
 import { useRoute } from 'vue-router'
-import { View, Star, Share, WarningFilled } from '@element-plus/icons-vue'
+import { View, Star, Share, WarningFilled, Link, ChatDotRound, ChatLineRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getNewsByIdUsingGet, updateNewsUsingPut } from "@/api/newsController"
 import { useUserStoreHook } from '../stores/modules/user'
 import { getCommentListUsingGet, addCommentUsingPost, deleteCommentByIdUsingDelete } from "@/api/commentController"
+import {submitFeedbackUsingPost} from "@/api/newsFeedbackController"
 import type { API } from '@/api/typings.d'
+import QRCode from 'qrcodejs2-fix'
 
 // 使用用户store
 const useUserStore = useUserStoreHook()
@@ -112,6 +174,18 @@ const news = ref<API.News>({
 const newComment = ref<string>('')
 // 评论列表
 const comments = ref<API.Comment[]>([])
+
+// 分享相关
+const shareDialogVisible = ref(false)
+const qrcodeRef = ref<HTMLElement | null>(null)
+const currentUrl = window.location.href
+
+// 反馈相关
+const feedbackDialogVisible = ref(false)
+const feedbackForm = ref({
+  content: '',
+  newsId: 0
+})
 
 // 组件挂载时初始化
 onMounted(async () => {
@@ -176,19 +250,95 @@ const goBack = (): void => {
 }
 
 /**
- * 处理分享操作
+ * 显示分享对话框
  */
-const handleShare = (): void => {
-  ElMessage.success('分享功能开发中')
+const showShareDialog = () => {
+  shareDialogVisible.value = true
+  // 在对话框显示后生成二维码
+  setTimeout(() => {
+    generateQRCode()
+  }, 100)
 }
 
 /**
- * 处理反馈操作
+ * 生成二维码
  */
-const handleWarningFilled = (): void => {
-  ElMessage.success('反馈功能开发中')
+const generateQRCode = () => {
+  if (qrcodeRef.value) {
+    qrcodeRef.value.innerHTML = ''
+    new QRCode(qrcodeRef.value, {
+      text: currentUrl,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    })
+  }
 }
 
+/**
+ * 复制链接
+ */
+const copyLink = () => {
+  navigator.clipboard.writeText(currentUrl).then(() => {
+    ElMessage.success('链接已复制到剪贴板')
+  }).catch(() => {
+    ElMessage.error('复制失败，请手动复制')
+  })
+}
+
+/**
+ * 分享到微信
+ */
+const shareToWeChat = () => {
+  // 微信分享需要配置微信JSSDK，这里仅作示例
+  ElMessage.info('请使用微信扫描二维码分享')
+}
+
+/**
+ * 分享到QQ
+ */
+const shareToQQ = () => {
+  window.open(`http://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(currentUrl)}&title=${encodeURIComponent(news.value.title)}`)
+}
+
+/**
+ * 显示反馈对话框
+ */
+const showFeedbackDialog = (): void => {
+  if (!useUserStore.user.id) {
+    ElMessage.error('请先登录')
+    return
+  }
+  feedbackForm.value = {
+    content: '',
+    newsId: news.value.id
+  }
+  feedbackDialogVisible.value = true
+}
+
+/**
+ * 提交反馈
+ */
+const submitFeedback = async (): Promise<void> => {
+  if (!feedbackForm.value.content.trim()) {
+    ElMessage.error('请输入反馈内容')
+    return
+  }
+
+  try {
+    const res = await submitFeedbackUsingPost(feedbackForm.value)
+    if (res.code === 0) {
+      ElMessage.success('反馈提交成功')
+      feedbackDialogVisible.value = false
+    } else {
+      ElMessage.error(res.message || '反馈提交失败')
+    }
+  } catch (error) {
+    ElMessage.error('反馈提交失败')
+  }
+}
 
 /**
  * 提交评论
@@ -262,5 +412,53 @@ const deleteComment = async (commentId: number): Promise<void> => {
 .comment-text{
   font-size: 14px;
   padding: 8px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.share-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.qrcode-container {
+  padding: 10px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+}
+
+.share-tips {
+  text-align: center;
+}
+
+.share-platforms {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.share-platforms .el-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>
