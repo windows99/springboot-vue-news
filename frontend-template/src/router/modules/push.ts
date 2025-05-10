@@ -10,7 +10,7 @@ export default {
     icon: "bell",
     title: "推送管理",
     roles: ["admin"],
-    rank: 2
+    rank: 4
   },
   children: [
     {

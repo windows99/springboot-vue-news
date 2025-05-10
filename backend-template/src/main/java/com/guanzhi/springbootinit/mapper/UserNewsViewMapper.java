@@ -9,6 +9,9 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 用户新闻浏览 Mapper
+ */
 @Mapper
 public interface UserNewsViewMapper extends BaseMapper<UserNewsView> {
     
@@ -85,4 +88,14 @@ public interface UserNewsViewMapper extends BaseMapper<UserNewsView> {
             @Param("similarUserIds") List<Long> similarUserIds, 
             @Param("excludeNewsIds") List<Long> excludeNewsIds, 
             @Param("limit") Integer limit);
+
+    /**
+     * 获取最近N天用户活跃度
+     */
+    @Select("SELECT DATE(viewTime) as date, COUNT(DISTINCT userId) as activeUsers, COUNT(*) as viewCount " +
+            "FROM user_news_view " +
+            "WHERE viewTime >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY) " +
+            "GROUP BY DATE(viewTime) " +
+            "ORDER BY date")
+    List<Map<String, Object>> selectUserActivity(int days);
 }

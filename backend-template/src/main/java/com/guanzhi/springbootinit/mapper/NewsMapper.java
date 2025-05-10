@@ -4,11 +4,15 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.guanzhi.springbootinit.model.entity.News;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * 新闻 Mapper
+ */
+@Mapper
 public interface NewsMapper extends BaseMapper<News> {
 
     /**
@@ -47,7 +51,7 @@ public interface NewsMapper extends BaseMapper<News> {
             "</foreach>" +
             "ELSE 0 END DESC, " +
             "</if>" +
-            "n.createtime DESC " +
+            "n.createTime DESC " +
             "LIMIT #{limit}" +
             "</script>")
     List<News> getNewsByTagsWithWeights(@Param("tagIds") List<Long> tagIds,
@@ -55,4 +59,45 @@ public interface NewsMapper extends BaseMapper<News> {
                                       @Param("excludeNewsIds") List<Long> excludeNewsIds,
                                       @Param("limit") Integer limit);
 
+    /**
+     * 获取新闻分类统计
+     */
+    @Select("SELECT t.tagName as categoryName, COUNT(n.id) as count " +
+            "FROM news n " +
+            "LEFT JOIN news_tag t ON n.category = t.id " +
+            "WHERE n.isDelete = 0 " +
+            "GROUP BY n.category, t.tagName")
+    List<Map<String, Object>> selectCategoryStats();
+
+    /**
+     * 获取新闻标签统计
+     */
+    @Select("SELECT t.tagName as tagName, COUNT(us.id) as count " +
+            "FROM news_tag t " +
+            "LEFT JOIN user_subscription us ON t.id = us.category " +
+            "LEFT JOIN news n ON us.category = n.category " +
+            "WHERE n.isDelete = 0 " +
+            "GROUP BY t.id, t.tagName")
+    List<Map<String, Object>> selectTagStats();
+
+    /**
+     * 获取最近N天新闻发布趋势
+     */
+    @Select("SELECT DATE(createTime) as date, COUNT(*) as count " +
+            "FROM news " +
+            "WHERE isDelete = 0 " +
+            "AND createTime >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY) " +
+            "GROUP BY DATE(createTime) " +
+            "ORDER BY date")
+    List<Map<String, Object>> selectNewsTrend(int days);
+
+    /**
+     * 获取热门新闻排行
+     */
+    @Select("SELECT id, title, viewCount, likeCount, commentCount " +
+            "FROM news " +
+            "WHERE isDelete = 0 " +
+            "ORDER BY viewCount DESC " +
+            "LIMIT #{limit}")
+    List<Map<String, Object>> selectHotNews(int limit);
 }

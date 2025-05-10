@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -28,6 +29,17 @@ public class UserOperationLogServiceImpl extends ServiceImpl<UserOperationLogMap
         log.setTargetId(targetId);
         log.setTargetType(targetType);
         log.setOperationDetail(operationDetail);
+        
+        // 设置时间
+        Date now = new Date();
+        log.setOperationTime(now);
+        log.setCreateTime(now);
+        log.setUpdateTime(now);
+        
+        // 设置默认值
+        log.setIsDelete(0);
+        
+        // 保存日志
         this.save(log);
     }
 

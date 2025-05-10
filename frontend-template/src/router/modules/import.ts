@@ -9,7 +9,7 @@ export default {
   meta: {
     icon: "documentAdd",
     title: "导入新闻",
-    rank: 1,
+    rank: 3,
     roles: ["admin"],
   },
   children: [

@@ -1,165 +1,448 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { ElCard, ElStatistic, ElTimeline, ElTimelineItem } from 'element-plus'
-import * as echarts from 'echarts'
-
-defineOptions({
-  name: "Welcome"
-})
-
-// Mock data
-const userCount = ref(12345)
-const newUsersToday = ref(23)
-const onlineUsers = ref(456)
-const systemUptime = ref(12345) // Using number type for ElStatistic
-
-const notifications = ref([
-  { type: 'info', title: '系统公告', content: '系统将于今晚进行维护', time: '10:25' },
-  { type: 'warning', title: '操作提醒', content: '请及时更新个人信息', time: '09:45' }
-])
-
-const logs = ref([
-  { type: 'success' as const, content: '用户 admin 登录成功', timestamp: '2025-03-17 10:24' },
-  { type: 'info' as const, content: '系统检查完成，无异常', timestamp: '2025-03-17 10:20' }
-])
-
-// Chart setup
-let userGrowthChart: echarts.ECharts | null = null
-let accessChart: echarts.ECharts | null = null
-
-onMounted(() => {
-  // User growth chart
-  userGrowthChart = echarts.init(document.getElementById('user-growth-chart'))
-  userGrowthChart.setOption({
-    title: { text: '用户增长趋势' },
-    xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'] },
-    yAxis: { type: 'value' },
-    series: [{ data: [120, 200, 150, 80, 70, 110], type: 'bar' }]
-  })
-
-  // Access chart
-  accessChart = echarts.init(document.getElementById('access-chart'))
-  accessChart.setOption({
-    title: { text: '系统访问量' },
-    xAxis: { type: 'category', data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
-    yAxis: { type: 'value' },
-    series: [{ data: [820, 932, 901, 934, 1290, 1330, 1320], type: 'line' }]
-  })
-})
-</script>
-
 <template>
-  <div class="welcome-container">
-    <!-- Header -->
+  <div class="dashboard-container">
+    <!-- 顶部统计卡片 -->
+    <el-row :gutter="20" class="stat-cards">
+      <el-col :span="6" v-for="(stat, index) in statistics" :key="index">
+        <el-card class="stat-card" :body-style="{ padding: '20px' }">
+          <div class="stat-icon">
+            <el-icon :size="40" :color="stat.color">
+              <component :is="stat.icon" />
+            </el-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-    <!-- Statistics Section -->
-    <div class="statistics-grid">
-      <ElCard>
-        <ElStatistic title="用户总数" :value="userCount" />
-      </ElCard>
-      <ElCard>
-        <ElStatistic title="今日新增用户" :value="newUsersToday" />
-      </ElCard>
-      <ElCard>
-        <ElStatistic title="当前在线用户" :value="onlineUsers" />
-      </ElCard>
-      <ElCard>
-        <ElStatistic title="系统运行时间" :value="systemUptime" />
-      </ElCard>
-    </div>
+    <!-- 图表区域 -->
+    <el-row :gutter="20" class="chart-row">
+      <!-- 新闻分类统计 -->
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="card-header">
+              <span>新闻分类统计</span>
+              <el-tag type="success">实时</el-tag>
+            </div>
+          </template>
+          <div class="chart-container" ref="categoryChartRef"></div>
+        </el-card>
+      </el-col>
 
-    <!-- Charts Section -->
-    <div class="charts-grid">
-      <div id="user-growth-chart" class="chart"></div>
-      <div id="access-chart" class="chart"></div>
-    </div>
+      <!-- 新闻标签统计 -->
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="card-header">
+              <span>新闻标签分布</span>
+              <el-tag type="warning">饼图</el-tag>
+            </div>
+          </template>
+          <div class="chart-container" ref="tagChartRef"></div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-    <!-- Notifications Section -->
-    <div class="notifications-section">
-      <h2>消息通知</h2>
-      <div class="notification-list">
-        <div v-for="(notice, index) in notifications" :key="index" class="notification-item">
-          <span class="notice-type" :class="notice.type">{{ notice.title }}</span>
-          <span class="notice-content">{{ notice.content }}</span>
-          <span class="notice-time">{{ notice.time }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- 趋势分析 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :span="24">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="card-header">
+              <span>新闻发布趋势</span>
+              <div class="header-actions">
+                <el-radio-group v-model="trendTimeRange" size="small">
+                  <el-radio-button label="7">近7天</el-radio-button>
+                  <el-radio-button label="30">近30天</el-radio-button>
+                </el-radio-group>
+              </div>
+            </div>
+          </template>
+          <div class="chart-container" ref="trendChartRef"></div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-    <!-- Logs Section -->
-    <div class="logs-section">
-      <h2>系统日志</h2>
-      <ElTimeline>
-        <ElTimelineItem v-for="(log, index) in logs" :key="index" :type="log.type" :timestamp="log.timestamp">
-          {{ log.content }}
-        </ElTimelineItem>
-      </ElTimeline>
-    </div>
+    <!-- 热门新闻排行 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="card-header">
+              <span>热门新闻排行</span>
+              <el-tag type="danger">TOP 10</el-tag>
+            </div>
+          </template>
+          <div class="hot-news-list">
+            <div v-for="(news, index) in hotNews" :key="index" class="hot-news-item">
+              <div class="rank" :class="'rank-' + (index + 1)">{{ index + 1 }}</div>
+              <div class="news-info">
+                <div class="news-title">{{ news.title }}</div>
+                <div class="news-stats">
+                  <span><el-icon>
+                      <View />
+                    </el-icon> {{ news.viewCount }}</span>
+                  <span><el-icon>
+                      <Star />
+                    </el-icon> {{ news.likeCount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- 系统状态 -->
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header>
+            <div class="card-header">
+              <span>系统状态</span>
+              <el-tag type="info">实时监控</el-tag>
+            </div>
+          </template>
+          <div class="system-status">
+            <div class="status-item">
+              <div class="status-label">CPU使用率</div>
+              <el-progress :percentage="systemStatus.cpuUsage" :color="getProgressColor(systemStatus.cpuUsage)"
+                :stroke-width="20" :show-text="false" />
+              <div class="status-value">{{ systemStatus.cpuUsage }}%</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">内存使用率</div>
+              <el-progress :percentage="systemStatus.memoryUsage" :color="getProgressColor(systemStatus.memoryUsage)"
+                :stroke-width="20" :show-text="false" />
+              <div class="status-value">{{ systemStatus.memoryUsage }}%</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent
+} from 'echarts/components'
+import * as echarts from 'echarts/core'
+import { View, Star } from '@element-plus/icons-vue'
+import { getDashboardDataUsingGet } from '@/api/dashboardController'
+
+// 注册 ECharts 组件
+use([
+  CanvasRenderer,
+  BarChart,
+  LineChart,
+  PieChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent
+])
+
+// 数据
+const statistics = ref([
+  { label: '总新闻数', value: 0, icon: 'Document', color: '#409EFF' },
+  { label: '总用户数', value: 0, icon: 'User', color: '#67C23A' },
+  { label: '今日新增新闻', value: 0, icon: 'Plus', color: '#E6A23C' },
+  { label: '今日新增用户', value: 0, icon: 'UserFilled', color: '#F56C6C' }
+])
+
+const trendTimeRange = ref('7')
+const hotNews = ref([])
+const systemStatus = ref({
+  cpuUsage: 0,
+  memoryUsage: 0
+})
+
+// 图表容器引用
+const categoryChartRef = ref(null)
+const tagChartRef = ref(null)
+const trendChartRef = ref(null)
+
+// 图表实例
+let categoryChart = null
+let tagChart = null
+let trendChart = null
+
+// 初始化图表
+const initCharts = () => {
+  // 使用 ref 引用的 DOM 元素初始化图表
+  categoryChart = echarts.init(categoryChartRef.value)
+  tagChart = echarts.init(tagChartRef.value)
+  trendChart = echarts.init(trendChartRef.value)
+}
+
+// 更新图表数据
+const updateCharts = (data) => {
+  if (!data) return
+
+  // 更新分类统计图表
+  categoryChart?.setOption({
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: data.categoryStats?.map(item => item.categoryName) || [] },
+    yAxis: { type: 'value' },
+    series: [{
+      data: data.categoryStats?.map(item => item.count) || [],
+      type: 'bar',
+      barWidth: '60%',
+      itemStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#83bff6' },
+          { offset: 0.5, color: '#188df0' },
+          { offset: 1, color: '#188df0' }
+        ])
+      }
+    }]
+  })
+
+  // 更新标签统计图表
+  tagChart?.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { orient: 'vertical', left: 'left' },
+    series: [{
+      type: 'pie',
+      radius: '50%',
+      data: data.tagStats?.map(item => ({
+        name: item.tagName,
+        value: item.count
+      })) || [],
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
+        }
+      }
+    }]
+  })
+
+  // 更新趋势图表
+  trendChart?.setOption({
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: data.newsTrend?.map(item => item.date) || [] },
+    yAxis: { type: 'value' },
+    series: [{
+      data: data.newsTrend?.map(item => item.count) || [],
+      type: 'line',
+      smooth: true,
+      areaStyle: {
+        opacity: 0.3
+      }
+    }]
+  })
+}
+
+// 获取进度条颜色
+const getProgressColor = (percentage) => {
+  if (percentage < 60) return '#67C23A'
+  if (percentage < 80) return '#E6A23C'
+  return '#F56C6C'
+}
+
+// 获取仪表盘数据
+const fetchDashboardData = async () => {
+  try {
+    const res = await getDashboardDataUsingGet()
+    if (res.code === 0 && res.data) {
+      statistics.value[0].value = res.data.totalNews || 0
+      statistics.value[1].value = res.data.totalUsers || 0
+      statistics.value[2].value = res.data.todayNews || 0
+      statistics.value[3].value = res.data.todayUsers || 0
+      hotNews.value = res.data.hotNews || []
+      systemStatus.value = res.data.systemStatus || { cpuUsage: 0, memoryUsage: 0 }
+      updateCharts(res.data)
+    }
+  } catch (error) {
+    console.error('获取仪表盘数据失败:', error)
+  }
+}
+
+// 定时刷新数据
+let timer = null
+const startAutoRefresh = () => {
+  timer = setInterval(fetchDashboardData, 30000) // 每30秒刷新一次
+}
+
+// 监听窗口大小变化，调整图表大小
+const handleResize = () => {
+  categoryChart?.resize()
+  tagChart?.resize()
+  trendChart?.resize()
+}
+
+onMounted(() => {
+  initCharts()
+  fetchDashboardData()
+  startAutoRefresh()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+  window.removeEventListener('resize', handleResize)
+  categoryChart?.dispose()
+  tagChart?.dispose()
+  trendChart?.dispose()
+})
+</script>
+
 <style scoped>
-.welcome-container {
+.dashboard-container {
+  padding: 20px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.stat-cards {
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+}
+
+.stat-icon {
+  margin-right: 20px;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #909399;
+}
+
+.chart-row {
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  height: 400px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-container {
+  height: 320px;
+}
+
+.hot-news-list {
+  height: 320px;
+  overflow-y: auto;
+}
+
+.hot-news-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #EBEEF5;
+}
+
+.rank {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.rank-1 {
+  background-color: #F56C6C;
+}
+
+.rank-2 {
+  background-color: #E6A23C;
+}
+
+.rank-3 {
+  background-color: #67C23A;
+}
+
+.news-info {
+  flex: 1;
+}
+
+.news-title {
+  font-size: 14px;
+  color: #303133;
+  margin-bottom: 5px;
+}
+
+.news-stats {
+  font-size: 12px;
+  color: #909399;
+}
+
+.news-stats span {
+  margin-right: 15px;
+}
+
+.system-status {
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
+.status-item {
+  margin-bottom: 20px;
 }
 
-.statistics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+.status-label {
+  margin-bottom: 10px;
+  color: #606266;
 }
 
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+.status-value {
+  text-align: right;
+  margin-top: 5px;
+  color: #909399;
 }
 
-.chart {
-  height: 300px;
+/* 自定义滚动条样式 */
+.hot-news-list::-webkit-scrollbar {
+  width: 6px;
 }
 
-.notifications-section {
-  margin-bottom: 30px;
+.hot-news-list::-webkit-scrollbar-thumb {
+  background-color: #909399;
+  border-radius: 3px;
 }
 
-.notification-list {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 10px;
-}
-
-.notification-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.notification-item:last-child {
-  border-bottom: none;
-}
-
-.notice-type {
-  font-weight: bold;
-}
-
-.notice-type.info {
-  color: #409eff;
-}
-
-.notice-type.warning {
-  color: #e6a23c;
-}
-
-.logs-section {
-  margin-bottom: 30px;
+.hot-news-list::-webkit-scrollbar-track {
+  background-color: #F5F7FA;
 }
 </style>

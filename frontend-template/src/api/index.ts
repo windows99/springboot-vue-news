@@ -5,6 +5,7 @@
 import * as newsPushController from "./newsPushController";
 import * as commentController from "./commentController";
 import * as commonController from "./commonController";
+import * as dashboardController from "./dashboardController";
 import * as fileController from "./fileController";
 import * as newsTagController from "./newsTagController";
 import * as newsController from "./newsController";
@@ -19,6 +20,7 @@ export default {
   newsPushController,
   commentController,
   commonController,
+  dashboardController,
   fileController,
   newsTagController,
   newsController,

@@ -16,6 +16,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseDashboardVO_ = {
+    code?: number;
+    data?: DashboardVO;
+    message?: string;
+  };
+
   type BaseResponseInt_ = {
     code?: number;
     data?: number;
@@ -179,6 +185,19 @@ declare namespace API {
     userAvatar?: string;
     userId?: number;
     username?: string;
+  };
+
+  type DashboardVO = {
+    categoryStats?: Record<string, any>[];
+    hotNews?: Record<string, any>[];
+    newsTrend?: Record<string, any>[];
+    systemStatus?: Record<string, any>;
+    tagStats?: Record<string, any>[];
+    todayNews?: number;
+    todayUsers?: number;
+    totalNews?: number;
+    totalUsers?: number;
+    userActivity?: Record<string, any>[];
   };
 
   type deleteAllViewsByUserIdUsingPOSTParams = {

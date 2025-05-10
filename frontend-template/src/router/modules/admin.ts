@@ -11,7 +11,7 @@ export default {
   redirect: "/admin/user/userManage",
   meta: {
     title: "用户管理",
-    icon: "User",
+    icon: "user",
     rank: 1,
     roles: ["admin"]
   },
