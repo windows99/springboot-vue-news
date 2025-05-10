@@ -242,14 +242,18 @@ const submitForm = async () => {
 
   try {
     await formRef.value.validate()
-
+    let res = {}
     if (isEdit.value) {
-      await updateNewsUsingPut({ id: addNewsInfo.value.id }, addNewsInfo.value)
+      res = await updateNewsUsingPut({ id: addNewsInfo.value.id }, addNewsInfo.value)
     } else {
-      await addNewsUsingPost(addNewsInfo.value)
+      res = await addNewsUsingPost(addNewsInfo.value)
     }
+    if (res.code === 0) {
+      router.push('/news/list')
 
-    router.push('/news/list')
+    } else {
+      ElMessage.error(res.message || '提交失败')
+    }
   } catch (error) {
     console.error('提交失败:', error)
   }

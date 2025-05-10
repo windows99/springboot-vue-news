@@ -114,29 +114,32 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Override
     public boolean addNews(News news) {
-
         try {
-//            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
-//                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
-//            }
-            int result =  newsMapper.insert(news);
+            // 检查标题和内容是否包含敏感词
+            if (sensitiveWordService.checkContentForSensitive(news.getTitle())) {
+                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "标题包含敏感词");
+            }
+            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
+                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
+            }
+            
+            // 过滤敏感词
+            String filteredTitle = sensitiveWordService.filterSensitiveWords(news.getTitle());
+            String filteredContent = sensitiveWordService.filterSensitiveWords(news.getContent());
+            
+            // 设置过滤后的内容
+            news.setTitle(filteredTitle);
+            news.setContent(filteredContent);
+            
+            int result = newsMapper.insert(news);
             return result > 0;
         } catch (BusinessException be) {
-//            log.info("发布新闻失败，原因：{}", be);
+            log.error("发布新闻失败，原因：{}", be.getMessage());
             throw be;
         } catch (Exception e) {
             log.error("发布新闻失败", e);
-            throw new RuntimeException("Failed to publish news", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "发布新闻失败");
         }
-
-
-//        try {
-//            int result = newsMapper.insert(news);
-//            return result > 0;
-//        } catch (Exception e) {
-//            log.error("Failed to insert news: ", e);
-//            throw new RuntimeException("Failed to insert news", e);
-//        }
     }
 
 //    @Override

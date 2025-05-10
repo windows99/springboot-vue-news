@@ -5,6 +5,7 @@ import com.guanzhi.springbootinit.mapper.SensitiveWordMapper;
 import com.guanzhi.springbootinit.model.entity.SensitiveWord;
 import com.guanzhi.springbootinit.service.SensitiveWordService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,5 +55,42 @@ public class SensitiveWordServiceImpl extends ServiceImpl<SensitiveWordMapper, S
             throw new RuntimeException(e);
         }
         return true;
+    }
+
+    @Override
+    public boolean checkContentForSensitive(String content) {
+        if (StringUtils.isBlank(content)) {
+            return false;
+        }
+        // 获取所有敏感词
+        List<SensitiveWord> sensitiveWords = this.list();
+        if (sensitiveWords.isEmpty()) {
+            return false;
+        }
+        
+        // 检查内容是否包含任何敏感词
+        return sensitiveWords.stream()
+                .anyMatch(word -> content.contains(word.getWord()));
+    }
+
+    @Override
+    public String filterSensitiveWords(String content) {
+        if (StringUtils.isBlank(content)) {
+            return content;
+        }
+        
+        // 获取所有敏感词
+        List<SensitiveWord> sensitiveWords = this.list();
+        if (sensitiveWords.isEmpty()) {
+            return content;
+        }
+        
+        // 替换所有敏感词为 *
+        String filteredContent = content;
+        for (SensitiveWord word : sensitiveWords) {
+            filteredContent = filteredContent.replace(word.getWord(), "*".repeat(word.getWord().length()));
+        }
+        
+        return filteredContent;
     }
 }
