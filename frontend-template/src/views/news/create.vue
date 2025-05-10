@@ -248,9 +248,8 @@ const submitForm = async () => {
     } else {
       res = await addNewsUsingPost(addNewsInfo.value)
     }
-    if (res.code === 0) {
+    if (res.code === 0 || res.status === 200) {
       router.push('/news/list')
-
     } else {
       ElMessage.error(res.message || '提交失败')
     }

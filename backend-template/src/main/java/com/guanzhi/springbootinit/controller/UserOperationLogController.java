@@ -38,10 +38,18 @@ public class UserOperationLogController {
      * @return 操作历史列表
      */
     @GetMapping("/history")
-    public BaseResponse<List<UserOperationLog>> getOperationHistory(HttpServletRequest request,
-            @RequestParam(defaultValue = "10") int limit) {
-        User loginUser = userService.getLoginUser(request);
-        List<UserOperationLog> history = userOperationLogService.getUserOperationHistory(loginUser.getId(), limit);
-        return ResultUtils.success(history);
+    public BaseResponse<Page<UserOperationLog>> getOperationHistory(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String operationType,
+            @RequestParam(required = false) String targetType,
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "10") long pageSize) {
+        try {
+            Page<UserOperationLog> page = userOperationLogService.getOperationHistory(userId, operationType, targetType, current, pageSize);
+            return ResultUtils.success(page);
+        } catch (Exception e) {
+            log.error("获取操作历史失败", e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取操作历史失败");
+        }
     }
 } 

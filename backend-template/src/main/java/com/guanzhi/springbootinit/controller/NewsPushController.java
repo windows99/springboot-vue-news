@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,40 +34,34 @@ public class NewsPushController {
     private UserService userService;
 
     /**
-     * 立即推送单条新闻
+     * 立即推送新闻
+     *
+     * @param newsId 新闻ID
+     * @param userIds 用户ID列表（可选，不传则推送给所有用户）
+     * @param request HTTP请求
+     * @return 是否推送成功
      */
-    @PostMapping("/immediate")
-    public BaseResponse<Boolean> pushImmediate(@RequestBody Map<String, Object> params, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
-        
+    @PostMapping("/immediately")
+    public BaseResponse<Boolean> pushImmediately(@RequestParam Long newsId, 
+                                               @RequestParam(required = false) List<Long> userIds,
+                                               HttpServletRequest request) {
         // 验证用户是否有权限推送给所有用户
+        User loginUser = userService.getLoginUser(request);
         if (!userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "仅管理员可执行此操作");
         }
         
-        // 获取参数
-        if (!params.containsKey("newsId")) {
+        if (newsId == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻ID不能为空");
         }
         
-        Long newsId = Long.parseLong(params.get("newsId").toString());
-        List<Long> userIds;
-        
         // 如果没有指定用户，则推送给所有用户
-        if (!params.containsKey("userIds") || params.get("userIds") == null) {
+        if (userIds == null || userIds.isEmpty()) {
             userIds = userService.getAllUserIds();
-        } else {
-            // 从参数中获取用户ID列表
-            userIds = new ArrayList<>();
-            List<?> userIdList = (List<?>) params.get("userIds");
-            for (Object userId : userIdList) {
-                userIds.add(Long.parseLong(userId.toString()));
-            }
         }
         
-        // 执行推送
-        boolean result = newsPushService.pushImmediately(newsId, userIds);
-        
+        List<Long> newsIds = Collections.singletonList(newsId);
+        boolean result = newsPushService.pushImmediately(newsIds, userIds);
         return ResultUtils.success(result);
     }
 

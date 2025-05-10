@@ -13,6 +13,8 @@ import DocumentAdd from "@iconify-icons/ep/document-add";
 import Bell from "@iconify-icons/ep/bell";
 import Files from "@iconify-icons/ep/files";
 import Setting from "@iconify-icons/ep/setting";
+import User from "@iconify-icons/ep/user";
+
 
 addIcon("homeFilled", HomeFilled);
 addIcon("memo", Memo);
@@ -22,3 +24,4 @@ addIcon("documentAdd", DocumentAdd);
 addIcon("bell", Bell);
 addIcon("files", Files);
 addIcon("setting", Setting);
+addIcon("user", User);

@@ -7,8 +7,8 @@
       </div>
       <div class="footer-section">
         <h4>联系我们</h4>
-        <p>电话: 123-456-7890</p>
-        <p>邮箱: info@news.com</p>
+        <p>电话: 176-3176-6054</p>
+        <p>邮箱: wsk_web@163.com</p>
       </div>
       <div class="footer-section">
         <h4>关注我们</h4>

@@ -1,10 +1,13 @@
 package com.guanzhi.springbootinit.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guanzhi.springbootinit.mapper.UserOperationLogMapper;
 import com.guanzhi.springbootinit.model.entity.UserOperationLog;
 import com.guanzhi.springbootinit.service.UserOperationLogService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,5 +39,20 @@ public class UserOperationLogServiceImpl extends ServiceImpl<UserOperationLogMap
                 .orderByDesc(UserOperationLog::getOperationTime)
                 .last("LIMIT " + limit)
                 .list();
+    }
+
+    @Override
+    public Page<UserOperationLog> getOperationHistory(Long userId, String operationType, String targetType, long current, long pageSize) {
+        Page<UserOperationLog> page = new Page<>(current, pageSize);
+        LambdaQueryWrapper<UserOperationLog> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 添加查询条件
+        queryWrapper.eq(userId != null, UserOperationLog::getUserId, userId)
+                .eq(StringUtils.isNotBlank(operationType), UserOperationLog::getOperationType, operationType)
+                .eq(StringUtils.isNotBlank(targetType), UserOperationLog::getTargetType, targetType)
+                .eq(UserOperationLog::getIsDelete, 0)
+                .orderByDesc(UserOperationLog::getOperationTime);
+        
+        return this.page(page, queryWrapper);
     }
 } 

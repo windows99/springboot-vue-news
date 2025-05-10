@@ -9,13 +9,16 @@ import com.guanzhi.springbootinit.mapper.NewsTagMapper;
 import com.guanzhi.springbootinit.mapper.NewsMapper;
 import com.guanzhi.springbootinit.model.dto.news.NewsTagQueryRequset;
 import com.guanzhi.springbootinit.model.entity.NewsTag;
+import com.guanzhi.springbootinit.model.entity.UserOperationLog;
 import com.guanzhi.springbootinit.service.NewsTagService;
+import com.guanzhi.springbootinit.service.UserOperationLogService;
 import com.guanzhi.springbootinit.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +33,25 @@ public class NewsTagServiceImpl extends ServiceImpl<NewsTagMapper, NewsTag> impl
     @Autowired
     private NewsMapper newsMapper;
 
+    @Autowired
+    private UserOperationLogService userOperationLogService;
+
     @Override
     public boolean addTag(NewsTag newsTag) {
         try {
             int result = newTagMapper.insert(newsTag);
+            // 记录操作日志
+            UserOperationLog log = new UserOperationLog();
+            log.setUserId(1L); // 使用系统默认用户ID
+            log.setOperationType("ADD");
+            log.setTargetId(newsTag.getId());
+            log.setTargetType("TAG");
+            log.setOperationTime(new Date());
+            log.setOperationDetail("添加新闻标签：" + newsTag.getTagname());
+            log.setCreateTime(new Date());
+            log.setUpdateTime(new Date());
+            log.setIsDelete(0);
+            userOperationLogService.save(log);
             return result > 0;
         } catch (Exception e) {
             log.error("Failed to add news tag", e);
@@ -48,6 +66,18 @@ public class NewsTagServiceImpl extends ServiceImpl<NewsTagMapper, NewsTag> impl
             if (result == 0) {
                 return "标签不存在，删除失败";
             }
+            // 记录操作日志
+            UserOperationLog log = new UserOperationLog();
+            log.setUserId(1L); // 系统操作
+            log.setOperationType("DELETE");
+            log.setTargetId(tagId);
+            log.setTargetType("TAG");
+            log.setOperationTime(new Date());
+            log.setOperationDetail("删除新闻标签ID：" + tagId);
+            log.setCreateTime(new Date());
+            log.setUpdateTime(new Date());
+            log.setIsDelete(0);
+            userOperationLogService.save(log);
             return "删除标签成功";
         } catch (Exception e) {
             // 检查是否是外键约束错误
@@ -98,7 +128,6 @@ public class NewsTagServiceImpl extends ServiceImpl<NewsTagMapper, NewsTag> impl
 
     @Override
     public QueryWrapper<NewsTag> getQueryWrapper(NewsTagQueryRequset request) {
-
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
         }

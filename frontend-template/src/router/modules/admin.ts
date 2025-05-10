@@ -3,14 +3,16 @@
  * admin：管理员角色
  * common：普通角色
  */
+import Layout from "@/layout/index.vue";
 
 export default {
   path: "/admin",
+  component: Layout,
   redirect: "/admin/user/userManage",
   meta: {
-    title: "后台管理",
-    icon: "lollipop",
-    rank: 10,
+    title: "用户管理",
+    icon: "User",
+    rank: 1,
     roles: ["admin"]
   },
   children: [
@@ -19,7 +21,8 @@ export default {
       name: "UserManage",
       component: () => import("@/views/permission/user/userManage.vue"),
       meta: {
-        title: "用户管理"
+        title: "用户管理",
+        icon: "User"
       }
     },
     {
@@ -28,6 +31,7 @@ export default {
       component: () => import("@/views/permission/user/commentManage.vue"),
       meta: {
         title: "评论管理",
+        icon: "ChatDotRound",
         roles: ["admin", "editor"]
       }
     }

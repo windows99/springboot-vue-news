@@ -70,12 +70,6 @@ declare namespace API {
     message?: string;
   };
 
-  type BaseResponseListUserOperationLog_ = {
-    code?: number;
-    data?: UserOperationLog[];
-    message?: string;
-  };
-
   type BaseResponseLoginUserVO_ = {
     code?: number;
     data?: LoginUserVO;
@@ -139,6 +133,12 @@ declare namespace API {
   type BaseResponsePageUser_ = {
     code?: number;
     data?: PageUser_;
+    message?: string;
+  };
+
+  type BaseResponsePageUserOperationLog_ = {
+    code?: number;
+    data?: PageUserOperationLog_;
     message?: string;
   };
 
@@ -268,8 +268,16 @@ declare namespace API {
   };
 
   type getOperationHistoryUsingGETParams = {
-    /** limit */
-    limit?: number;
+    /** current */
+    current?: number;
+    /** operationType */
+    operationType?: string;
+    /** pageSize */
+    pageSize?: number;
+    /** targetType */
+    targetType?: string;
+    /** userId */
+    userId?: number;
   };
 
   type getPendingFeedbackListUsingGETParams = {
@@ -367,6 +375,18 @@ declare namespace API {
     viewcount?: number;
   };
 
+  type NewsAddRequest = {
+    author?: string;
+    category?: number;
+    content?: string;
+    coverImage?: string;
+    source?: string;
+    status?: number;
+    tagIds?: number[];
+    title?: string;
+    userId?: number;
+  };
+
   type NewsFeedback = {
     content?: string;
     createTime?: string;
@@ -450,11 +470,13 @@ declare namespace API {
   type NewsQueryRequest = {
     author?: string;
     category?: number;
+    content?: string;
     current?: number;
     id?: number;
     pageSize?: number;
     sortField?: string;
     sortOrder?: string;
+    source?: string;
     status?: number;
     title?: string;
   };
@@ -465,6 +487,19 @@ declare namespace API {
     isdelete?: number;
     tagname?: string;
     updatetime?: string;
+  };
+
+  type NewsUpdateRequest = {
+    author?: string;
+    category?: number;
+    content?: string;
+    coverImage?: string;
+    id?: number;
+    source?: string;
+    status?: number;
+    tagIds?: number[];
+    title?: string;
+    userId?: number;
   };
 
   type OrderItem = {
@@ -524,6 +559,19 @@ declare namespace API {
     total?: number;
   };
 
+  type PageUserOperationLog_ = {
+    countId?: string;
+    current?: number;
+    maxLimit?: number;
+    optimizeCountSql?: boolean;
+    orders?: OrderItem[];
+    pages?: number;
+    records?: UserOperationLog[];
+    searchCount?: boolean;
+    size?: number;
+    total?: number;
+  };
+
   type PageUserVO_ = {
     countId?: string;
     current?: number;
@@ -540,6 +588,13 @@ declare namespace API {
   type publishNewsUsingPUTParams = {
     /** id */
     id: number;
+  };
+
+  type pushImmediatelyUsingPOSTParams = {
+    /** newsId */
+    newsId: number;
+    /** userIds */
+    userIds?: number[];
   };
 
   type recordViewUsingPOSTParams = {

@@ -17,17 +17,17 @@ export async function pushBatchUsingPost(
   });
 }
 
-/** pushImmediate POST /api/api/news/push/immediate */
-export async function pushImmediateUsingPost(
-  body: Record<string, any>,
+/** pushImmediately POST /api/api/news/push/immediately */
+export async function pushImmediatelyUsingPost(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.pushImmediatelyUsingPOSTParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseBoolean_>("/api/api/news/push/immediate", {
+  return request<API.BaseResponseBoolean_>("/api/api/news/push/immediately", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
+    params: {
+      ...params
     },
-    data: body,
     ...(options || {})
   });
 }

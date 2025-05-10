@@ -9,16 +9,15 @@ import com.guanzhi.springbootinit.model.dto.news.NewsRecommendDTO;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.service.NewsRecommendService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/news/recommend")
 @Slf4j
 public class NewsRecommendController {
 
-    @Resource
+    @Autowired
     private NewsRecommendService newsRecommendService;
 
     /**

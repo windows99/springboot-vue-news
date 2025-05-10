@@ -5,14 +5,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.guanzhi.springbootinit.common.BaseResponse;
-import com.guanzhi.springbootinit.common.ErrorCode;
 import com.guanzhi.springbootinit.common.ResultUtils;
 import com.guanzhi.springbootinit.exception.BusinessException;
 import com.guanzhi.springbootinit.model.dto.news.NewsQueryRequest;
 import com.guanzhi.springbootinit.model.dto.news.NewsAddRequest;
 import com.guanzhi.springbootinit.model.dto.news.NewsUpdateRequest;
 import com.guanzhi.springbootinit.model.entity.News;
-import com.guanzhi.springbootinit.model.entity.User;
 import com.guanzhi.springbootinit.service.NewsService;
 import com.guanzhi.springbootinit.service.UserNewsViewService;
 import com.guanzhi.springbootinit.service.UserService;
@@ -46,6 +44,7 @@ public class NewsController {
         long size = newsQueryRequest.getPageSize();
         Page<News> newsPage = newsService.page(new Page<>(current, size),
                 newsService.getQueryWrapper(newsQueryRequest));
+
         return ResultUtils.success(newsPage);
     }
 
@@ -78,53 +77,33 @@ public class NewsController {
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateNews(
             @PathVariable Long id,
-            @RequestBody NewsUpdateRequest newsUpdateRequest,
-            HttpServletRequest request) {
+            @RequestBody NewsUpdateRequest newsUpdateRequest) {
         try {
-            // 获取当前登录用户
-            User loginUser = userService.getLoginUser(request);
-            if (loginUser == null) {
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
-            }
-            // 设置用户ID
-            newsUpdateRequest.setUserId(loginUser.getId());
             newsUpdateRequest.setId(id);
             boolean result = newsService.updateNews(newsUpdateRequest);
             if (result) {
                 return ResponseEntity.ok(
-                        Map.of("message", "新闻更新成功", "status", 200));
+                        Map.of("message", "News updated successfully", "status", 200));
             } else {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("message", "新闻更新失败", "status", 400));
+                        .body(Map.of("message", "Failed to update news", "status", 400));
             }
-        } catch (BusinessException e) {
-            log.error("更新新闻失败: ", e);
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage(), "status", 400));
         } catch (Exception e) {
-            log.error("更新新闻失败: ", e);
+            log.error("Error updating news with id {}", id, e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", e.getMessage(), "status", 500));
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteNews(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<?> deleteNews(@PathVariable Long id) {
         try {
-            // 获取当前登录用户
-            User loginUser = userService.getLoginUser(request);
-            if (loginUser == null) {
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
-            }
-            boolean result = newsService.deleteNewsById(id, loginUser.getId());
+            boolean result = newsService.deleteNewsById(id);
             if (result) {
                 return ResponseEntity.ok(Map.of("message", "新闻删除成功", "status", 200));
             } else {
                 return ResponseEntity.badRequest().body(Map.of("message", "新闻删除失败", "status", 400));
             }
-        } catch (BusinessException e) {
-            log.error("删除新闻失败: ", e);
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(), "status", 400));
         } catch (Exception e) {
             log.error("删除新闻失败: ", e);
             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", 500));
@@ -132,55 +111,37 @@ public class NewsController {
     }
 
     @PutMapping("/publish/{id}")
-    public ResponseEntity<?> publishNews(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<?> publishNews(@PathVariable Long id) {
         try {
-            // 获取当前登录用户
-            User loginUser = userService.getLoginUser(request);
-            if (loginUser == null) {
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
-            }
-            newsService.publishNews(id, loginUser.getId());
-            return ResponseEntity.ok(Map.of("message", "新闻发布成功", "status", 200));
-        } catch (BusinessException e) {
-            log.error("发布新闻失败: ", e);
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(), "status", 400));
+            newsService.publishNews(id);
+            return ResponseEntity.ok(Map.of("message", "News published successfully", "status", 200));
         } catch (Exception e) {
-            log.error("发布新闻失败: ", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", e.getMessage(), "status", 500));
         }
     }
+
 
     @PutMapping("/shelf/{id}")
-    public ResponseEntity<?> shelfNews(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<?> shelfNews(@PathVariable Long id) {
         try {
-            // 获取当前登录用户
-            User loginUser = userService.getLoginUser(request);
-            if (loginUser == null) {
-                throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
-            }
-            newsService.shelfNews(id, loginUser.getId());
-            return ResponseEntity.ok(Map.of("message", "新闻下架成功", "status", 200));
-        } catch (BusinessException e) {
-            log.error("下架新闻失败: ", e);
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(), "status", 400));
+            newsService.shelfNews(id);
+            return ResponseEntity.ok(Map.of("message", "News shelved successfully", "status", 200));
         } catch (Exception e) {
-            log.error("下架新闻失败: ", e);
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", e.getMessage(), "status", 500));
         }
     }
 
+
     @PutMapping("/setStatus/{id}")
-    public BaseResponse<String> setStatusNews(@PathVariable Long id, @RequestParam int statusInt, HttpServletRequest request) {
-        // 获取当前登录用户
-        User loginUser = userService.getLoginUser(request);
-        if (loginUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
-        }
-        newsService.setStatusNews(id, statusInt, loginUser.getId());
-        return ResultUtils.success("状态更新完成");
+    public BaseResponse<String> setStatusNews(@PathVariable Long id, @RequestParam int statusInt) {
+        newsService.setStatusNews(id, statusInt);
+        return ResultUtils.success("更新完成");
     }
+
+
+
 
     @GetMapping("/jisunews/list")
     public JSONObject getJisunews(String channel){

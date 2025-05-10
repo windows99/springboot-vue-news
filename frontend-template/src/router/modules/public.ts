@@ -5,7 +5,8 @@ export default {
     title: "公共配置",
     icon: "setting",
     roles: ["admin"],
-    keepAlive: true
+    keepAlive: true,
+    rank: 5
   },
   children: [
     {

@@ -1,6 +1,7 @@
 package com.guanzhi.springbootinit.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -12,10 +13,12 @@ import com.guanzhi.springbootinit.mapper.UserSubscriptionMapper;
 import com.guanzhi.springbootinit.model.dto.NewsPushDTO;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.model.entity.NewsPush;
+import com.guanzhi.springbootinit.model.entity.UserOperationLog;
 import com.guanzhi.springbootinit.model.vo.WebSocketMessage;
 import com.guanzhi.springbootinit.model.vo.NewsPushVO;
 import com.guanzhi.springbootinit.service.NewsPushService;
 import com.guanzhi.springbootinit.service.NewsService;
+import com.guanzhi.springbootinit.service.UserOperationLogService;
 import com.guanzhi.springbootinit.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,99 +47,31 @@ public class NewsPushServiceImpl implements NewsPushService {
     @Resource
     private UserSubscriptionMapper userSubscriptionMapper;
 
+    @Resource
+    private WebSocketServer webSocketServer;
+
+    @Resource
+    private UserOperationLogService userOperationLogService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean pushImmediately(Long newsId, List<Long> userIds) {
-        if (newsId == null || userIds == null || userIds.isEmpty()) {
+    public boolean pushImmediately(List<Long> newsIds, List<Long> userIds) {
+        if (newsIds == null || newsIds.isEmpty() || userIds == null || userIds.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         
         // 获取新闻信息
-        News news = newsMapper.selectById(newsId);
-        if (news == null) {
+        List<News> newsList = newsMapper.selectBatchIds(newsIds);
+        if (newsList.isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
         }
         
         // 创建推送记录列表
         List<NewsPush> pushList = new ArrayList<>();
-        for (Long userId : userIds) {
-            try {
-                // 创建推送记录
-                NewsPush newsPush = new NewsPush();
-                newsPush.setUserId(userId);
-                newsPush.setNewsId(newsId);
-                newsPush.setPushTime(new Date());
-                newsPush.setPushType(1); // 即时推送
-                newsPush.setStatus(1);   // 已推送
-                newsPush.setIsRead(0);   // 未读
-                newsPush.setIsDelete(0); // 未删除
-                pushList.add(newsPush);
-            } catch (Exception e) {
-                log.error("创建推送记录失败，用户ID：{}，新闻ID：{}", userId, newsId, e);
-            }
-        }
-        
-        // 批量插入推送记录
-        if (!pushList.isEmpty()) {
-            newsPushMapper.insertBatch(pushList);
-        }
-        
-        // 构建推送消息
-        NewsPushDTO pushDTO = new NewsPushDTO();
-        pushDTO.setNewsId(String.valueOf(news.getId()));
-        pushDTO.setTitle(news.getTitle());
-        pushDTO.setContent(news.getContent());
-        pushDTO.setCoverImage(news.getCoverImage());
-        pushDTO.setSource(news.getSource());
-        pushDTO.setAuthor(news.getAuthor());
-        pushDTO.setPublishTime(news.getCreatetime());
-        pushDTO.setViewCount(news.getViewcount());
-        pushDTO.setLikeCount(news.getLikeCount());
-        pushDTO.setCommentCount(news.getCommentCount());
-        pushDTO.setCategory(String.valueOf(news.getCategory()));
-        pushDTO.setStatus(news.getStatus());
-        pushDTO.setIsDelete(news.getIsdelete());
-        pushDTO.setCreateTime(news.getCreatetime());
-        pushDTO.setUpdateTime(news.getUpdateTime());
-        
-        // 发送批量推送消息
-        for (Long userId : userIds) {
-            try {
-                pushDTO.setUserId(String.valueOf(userId));
-                WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "您有新的新闻推送", List.of(pushDTO));
-                String messageJson = JSON.toJSONString(message);
-                WebSocketServer.sendMessageToUser(userId.toString(), messageJson);
-            } catch (Exception e) {
-                log.error("发送WebSocket通知失败，用户ID: {}, 新闻ID: {}", userId, newsId, e);
-            }
-        }
-        
-        return true;
-    }
-
-    @Override
-    public int pushMultipleNews(List<Long> newsIds, List<Long> userIds) {
-        if (newsIds == null || newsIds.isEmpty() || userIds == null || userIds.isEmpty()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        
-        int successCount = 0;
-        Map<Long, News> newsMap = new HashMap<>();
-        List<NewsPush> pushList = new ArrayList<>();
-        
-        // 批量获取新闻信息
         for (Long newsId : newsIds) {
-            News news = newsMapper.selectById(newsId);
-            if (news != null) {
-                newsMap.put(newsId, news);
-            }
-        }
-        
-        // 创建推送记录
-        for (Long newsId : newsMap.keySet()) {
-            News news = newsMap.get(newsId);
             for (Long userId : userIds) {
                 try {
+                    // 创建推送记录
                     NewsPush newsPush = new NewsPush();
                     newsPush.setUserId(userId);
                     newsPush.setNewsId(newsId);
@@ -146,7 +81,6 @@ public class NewsPushServiceImpl implements NewsPushService {
                     newsPush.setIsRead(0);   // 未读
                     newsPush.setIsDelete(0); // 未删除
                     pushList.add(newsPush);
-                    successCount++;
                 } catch (Exception e) {
                     log.error("创建推送记录失败，用户ID：{}，新闻ID：{}", userId, newsId, e);
                 }
@@ -158,33 +92,35 @@ public class NewsPushServiceImpl implements NewsPushService {
             newsPushMapper.insertBatch(pushList);
         }
         
-        // 按用户分组发送批量推送消息
+        // 构建推送消息
+        List<NewsPushDTO> pushDTOList = new ArrayList<>();
+        for (News news : newsList) {
+            NewsPushDTO pushDTO = new NewsPushDTO();
+            pushDTO.setNewsId(String.valueOf(news.getId()));
+            pushDTO.setTitle(news.getTitle());
+            pushDTO.setContent(news.getContent());
+            pushDTO.setCoverImage(news.getCoverImage());
+            pushDTO.setSource(news.getSource());
+            pushDTO.setAuthor(news.getAuthor());
+            pushDTO.setPublishTime(news.getCreatetime());
+            pushDTO.setViewCount(news.getViewcount());
+            pushDTO.setLikeCount(news.getLikeCount());
+            pushDTO.setCommentCount(news.getCommentCount());
+            pushDTO.setCategory(String.valueOf(news.getCategory()));
+            pushDTO.setStatus(news.getStatus());
+            pushDTO.setIsDelete(news.getIsdelete());
+            pushDTO.setCreateTime(news.getCreatetime());
+            pushDTO.setUpdateTime(news.getUpdateTime());
+            pushDTOList.add(pushDTO);
+        }
+        
+        // 发送批量推送消息
         for (Long userId : userIds) {
             try {
-                List<NewsPushDTO> pushDTOs = newsMap.values().stream()
-                    .map(news -> {
-                        NewsPushDTO dto = new NewsPushDTO();
-                        dto.setUserId(String.valueOf(userId));
-                        dto.setNewsId(String.valueOf(news.getId()));
-                        dto.setTitle(news.getTitle());
-                        dto.setContent(news.getContent());
-                        dto.setCoverImage(news.getCoverImage());
-                        dto.setSource(news.getSource());
-                        dto.setAuthor(news.getAuthor());
-                        dto.setPublishTime(news.getCreatetime());
-                        dto.setViewCount(news.getViewcount());
-                        dto.setLikeCount(news.getLikeCount());
-                        dto.setCommentCount(news.getCommentCount());
-                        dto.setCategory(String.valueOf(news.getCategory()));
-                        dto.setStatus(news.getStatus());
-                        dto.setIsDelete(news.getIsdelete());
-                        dto.setCreateTime(news.getCreatetime());
-                        dto.setUpdateTime(news.getUpdateTime());
-                        return dto;
-                    })
-                    .collect(Collectors.toList());
-                
-                WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "您有新的新闻推送", pushDTOs);
+                for (NewsPushDTO pushDTO : pushDTOList) {
+                    pushDTO.setUserId(String.valueOf(userId));
+                }
+                WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "您有新的新闻推送", pushDTOList);
                 String messageJson = JSON.toJSONString(message);
                 WebSocketServer.sendMessageToUser(userId.toString(), messageJson);
             } catch (Exception e) {
@@ -192,7 +128,129 @@ public class NewsPushServiceImpl implements NewsPushService {
             }
         }
         
-        return successCount;
+        // 记录操作日志
+        for (Long userId : userIds) {
+            for (Long newsId : newsIds) {
+                try {
+                    UserOperationLog log = new UserOperationLog();
+                    log.setUserId(userId);
+                    log.setOperationType("PUSH");
+                    log.setTargetId(newsId);
+                    log.setTargetType("NEWS");
+                    log.setOperationTime(new Date());
+                    log.setOperationDetail("推送新闻通知");
+                    log.setCreateTime(new Date());
+                    log.setUpdateTime(new Date());
+                    log.setIsDelete(0);
+                    userOperationLogService.save(log);
+                } catch (Exception e) {
+                    log.error("推送新闻失败: newsId={}, userId={}", newsId, userId);
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "推送新闻失败");
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int pushMultipleNews(List<Long> newsIds, List<Long> userIds) {
+        if (newsIds == null || newsIds.isEmpty() || userIds == null || userIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        
+        // 获取新闻信息
+        List<News> newsList = newsMapper.selectBatchIds(newsIds);
+        if (newsList.isEmpty()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
+        }
+        
+        // 创建推送记录列表
+        List<NewsPush> pushList = new ArrayList<>();
+        for (Long newsId : newsIds) {
+            for (Long userId : userIds) {
+                try {
+                    // 创建推送记录
+                    NewsPush newsPush = new NewsPush();
+                    newsPush.setUserId(userId);
+                    newsPush.setNewsId(newsId);
+                    newsPush.setPushTime(new Date());
+                    newsPush.setPushType(1); // 即时推送
+                    newsPush.setStatus(1);   // 已推送
+                    newsPush.setIsRead(0);   // 未读
+                    newsPush.setIsDelete(0); // 未删除
+                    pushList.add(newsPush);
+                } catch (Exception e) {
+                    log.error("创建推送记录失败，用户ID：{}，新闻ID：{}", userId, newsId, e);
+                }
+            }
+        }
+        
+        // 批量插入推送记录
+        if (!pushList.isEmpty()) {
+            newsPushMapper.insertBatch(pushList);
+        }
+        
+        // 构建推送消息
+        List<NewsPushDTO> pushDTOList = new ArrayList<>();
+        for (News news : newsList) {
+            NewsPushDTO pushDTO = new NewsPushDTO();
+            pushDTO.setNewsId(String.valueOf(news.getId()));
+            pushDTO.setTitle(news.getTitle());
+            pushDTO.setContent(news.getContent());
+            pushDTO.setCoverImage(news.getCoverImage());
+            pushDTO.setSource(news.getSource());
+            pushDTO.setAuthor(news.getAuthor());
+            pushDTO.setPublishTime(news.getCreatetime());
+            pushDTO.setViewCount(news.getViewcount());
+            pushDTO.setLikeCount(news.getLikeCount());
+            pushDTO.setCommentCount(news.getCommentCount());
+            pushDTO.setCategory(String.valueOf(news.getCategory()));
+            pushDTO.setStatus(news.getStatus());
+            pushDTO.setIsDelete(news.getIsdelete());
+            pushDTO.setCreateTime(news.getCreatetime());
+            pushDTO.setUpdateTime(news.getUpdateTime());
+            pushDTOList.add(pushDTO);
+        }
+        
+        // 发送批量推送消息
+        for (Long userId : userIds) {
+            try {
+                for (NewsPushDTO pushDTO : pushDTOList) {
+                    pushDTO.setUserId(String.valueOf(userId));
+                }
+                WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "您有新的新闻推送", pushDTOList);
+                String messageJson = JSON.toJSONString(message);
+                WebSocketServer.sendMessageToUser(userId.toString(), messageJson);
+            } catch (Exception e) {
+                log.error("发送WebSocket通知失败，用户ID: {}", userId, e);
+            }
+        }
+        
+        // 记录操作日志
+        for (Long userId : userIds) {
+            for (Long newsId : newsIds) {
+                try {
+                    UserOperationLog log = new UserOperationLog();
+                    log.setUserId(userId);
+                    log.setOperationType("PUSH");
+                    log.setTargetId(newsId);
+                    log.setTargetType("NEWS");
+                    log.setOperationTime(new Date());
+                    log.setOperationDetail("批量推送新闻通知");
+                    log.setCreateTime(new Date());
+                    log.setUpdateTime(new Date());
+                    log.setIsDelete(0);
+                    userOperationLogService.save(log);
+                } catch (Exception e) {
+                    log.error("推送新闻失败: newsId={}, userId={}", newsId, userId);
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "推送新闻失败");
+                }
+            }
+        }
+        
+        return pushList.size();
     }
     
     @Override
@@ -272,6 +330,24 @@ public class NewsPushServiceImpl implements NewsPushService {
             log.info("成功向用户 {} 推送 {} 条个性化新闻", userId, pushDTOs.size());
         } catch (Exception e) {
             log.error("发送WebSocket通知失败，用户ID: {}", userId, e);
+        }
+        
+        // 记录操作日志
+        try {
+            UserOperationLog log = new UserOperationLog();
+            log.setUserId(userId);
+            log.setOperationType("PERSONALIZED_PUSH");
+            log.setTargetId(userId);
+            log.setTargetType("USER");
+            log.setOperationTime(new Date());
+            log.setOperationDetail("推送个性化新闻推荐");
+            log.setCreateTime(new Date());
+            log.setUpdateTime(new Date());
+            log.setIsDelete(0);
+            userOperationLogService.save(log);
+        } catch (Exception e) {
+            log.error("推送个性化新闻失败: userId={}", userId);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "推送个性化新闻失败");
         }
         
         return newsList.size();
@@ -430,5 +506,78 @@ public class NewsPushServiceImpl implements NewsPushService {
         resultPage.setRecords(pushVOList);
         
         return resultPage;
+    }
+
+    @Override
+    public boolean pushNewsToUser(Long newsId, Long userId) {
+        if (newsId == null || userId == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        try {
+            // 创建推送记录
+            NewsPush newsPush = new NewsPush();
+            newsPush.setNewsId(newsId);
+            newsPush.setUserId(userId);
+            newsPush.setIsRead(0);
+            newsPush.setIsDelete(0);
+            newsPush.setCreateTime(new Date());
+            newsPush.setUpdateTime(new Date());
+            
+            // 保存推送记录
+            boolean result = newsPushMapper.insert(newsPush) > 0;
+            
+            if (result) {
+                // 获取新闻信息
+                News news = newsMapper.selectById(newsId);
+                if (news != null) {
+                    // 构建推送消息
+                    NewsPushDTO pushDTO = new NewsPushDTO();
+                    pushDTO.setUserId(String.valueOf(userId));
+                    pushDTO.setNewsId(String.valueOf(news.getId()));
+                    pushDTO.setTitle(news.getTitle());
+                    pushDTO.setContent(news.getContent());
+                    pushDTO.setCoverImage(news.getCoverImage());
+                    pushDTO.setSource(news.getSource());
+                    pushDTO.setAuthor(news.getAuthor());
+                    pushDTO.setPublishTime(news.getCreatetime());
+                    pushDTO.setViewCount(news.getViewcount());
+                    pushDTO.setLikeCount(news.getLikeCount());
+                    pushDTO.setCommentCount(news.getCommentCount());
+                    pushDTO.setCategory(String.valueOf(news.getCategory()));
+                    pushDTO.setStatus(news.getStatus());
+                    pushDTO.setIsDelete(news.getIsdelete());
+                    pushDTO.setCreateTime(news.getCreatetime());
+                    pushDTO.setUpdateTime(news.getUpdateTime());
+
+                    // 发送WebSocket通知
+                    try {
+                        WebSocketMessage<NewsPushDTO> message = WebSocketMessage.buildBatch(3, "您有新的新闻推送", Collections.singletonList(pushDTO));
+                        String messageJson = JSON.toJSONString(message);
+                        WebSocketServer.sendMessageToUser(userId.toString(), messageJson);
+                    } catch (Exception e) {
+                        log.error("发送WebSocket通知失败，用户ID: {}", userId, e);
+                    }
+                }
+                
+                // 记录操作日志
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(userId);
+                log.setOperationType("PUSH");
+                log.setTargetId(newsId);
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("推送新闻通知");
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            log.error("推送新闻失败: newsId={}, userId={}", newsId, userId);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "推送新闻失败");
+        }
     }
 } 

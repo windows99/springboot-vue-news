@@ -1,11 +1,16 @@
+const { VITE_HIDE_HOME } = import.meta.env;
+const Layout = () => import("@/layout/index.vue");
+
 export default {
   path: "/news",
+  component: Layout,
   redirect: "/news/list",
   meta: {
     title: "新闻管理",
     icon: "files",
     roles: ["admin", "editor", "manage"],
-    keepAlive: true
+    keepAlive: true,
+    rank: 1
   },
   children: [
     {

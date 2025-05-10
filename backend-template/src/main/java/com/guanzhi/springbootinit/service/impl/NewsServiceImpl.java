@@ -1,7 +1,11 @@
 package com.guanzhi.springbootinit.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.guanzhi.springbootinit.model.dto.news.NewsAddRequest;
+import com.guanzhi.springbootinit.model.dto.news.NewsUpdateRequest;
+import com.guanzhi.springbootinit.model.entity.UserOperationLog;
 import com.guanzhi.springbootinit.service.SensitiveWordService;
+import com.guanzhi.springbootinit.service.UserOperationLogService;
 import com.guanzhi.springbootinit.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -35,6 +39,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Autowired
     private SensitiveWordService sensitiveWordService;
+
+    @Autowired
+    private UserOperationLogService userOperationLogService;
 
     @Override
     public QueryWrapper<News> getQueryWrapper(NewsQueryRequest newsQueryRequest) {
@@ -91,8 +98,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         return queryWrapper;
     }
 
-
-
     @Override
     public News getNewsById(Long newsId){
         News news = newsMapper.selectById(newsId);
@@ -111,82 +116,111 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         return news;
     }
 
-
     @Override
-    public boolean addNews(News news) {
+    public Long addNews(NewsAddRequest newsAddRequest) {
+        // 参数校验
+        if (newsAddRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        if (StringUtils.isBlank(newsAddRequest.getTitle())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻标题不能为空");
+        }
+        if (StringUtils.isBlank(newsAddRequest.getContent())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻内容不能为空");
+        }
+        if (newsAddRequest.getCategory() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻分类不能为空");
+        }
+        if (StringUtils.isBlank(newsAddRequest.getAuthor())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻作者不能为空");
+        }
+        if (StringUtils.isBlank(newsAddRequest.getSource())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻来源不能为空");
+        }
+        
+        // 检查标题和内容是否包含敏感词
+        if (sensitiveWordService.checkContentForSensitive(newsAddRequest.getTitle())) {
+            throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "标题包含敏感词");
+        }
+        if (sensitiveWordService.checkContentForSensitive(newsAddRequest.getContent())) {
+            throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
+        }
+        
+        // 过滤敏感词
+        String filteredTitle = sensitiveWordService.filterSensitiveWords(newsAddRequest.getTitle());
+        String filteredContent = sensitiveWordService.filterSensitiveWords(newsAddRequest.getContent());
+        
+        // 创建新闻对象
+        News news = new News();
+        news.setTitle(filteredTitle);
+        news.setContent(filteredContent);
+        news.setCategory(newsAddRequest.getCategory());
+        news.setStatus(newsAddRequest.getStatus() != null ? newsAddRequest.getStatus() : 1); // 默认状态为1（草稿）
+        news.setAuthor(newsAddRequest.getAuthor());
+        news.setSource(newsAddRequest.getSource());
+        news.setCoverImage(newsAddRequest.getCoverImage());
+        news.setCreatetime(new Date());
+        news.setUpdateTime(new Date());
+        news.setIsdelete(0);
+        news.setViewcount(0);
+        news.setLikeCount(0);
+        news.setCommentCount(0);
+        
         try {
-            // 检查标题和内容是否包含敏感词
-            if (sensitiveWordService.checkContentForSensitive(news.getTitle())) {
-                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "标题包含敏感词");
-            }
-            if (sensitiveWordService.checkContentForSensitive(news.getContent())) {
-                throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
-            }
-            
-            // 过滤敏感词
-            String filteredTitle = sensitiveWordService.filterSensitiveWords(news.getTitle());
-            String filteredContent = sensitiveWordService.filterSensitiveWords(news.getContent());
-            
-            // 设置过滤后的内容
-            news.setTitle(filteredTitle);
-            news.setContent(filteredContent);
-            
+            // 保存新闻
             int result = newsMapper.insert(news);
+            if (result <= 0) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "保存新闻失败");
+            }
+            
+            // 记录操作日志
+            try {
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(newsAddRequest.getUserId() != null ? newsAddRequest.getUserId() : 1L); // 如果用户ID为空，使用系统默认ID
+                log.setOperationType("NEWS_ADD"); // 使用更具体的操作类型
+                log.setTargetId(news.getId());
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("发布新闻：" + news.getTitle());
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            } catch (Exception e) {
+                // 日志记录失败不影响主流程
+                log.error("记录操作日志失败", e);
+            }
+            
+            return news.getId();
+        } catch (Exception e) {
+            log.error("发布新闻失败:{}", newsAddRequest, e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "发布新闻失败：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public boolean deleteNewsById(Long id, Long userId) {
+        try {
+            // 删除新闻
+            int result = newsMapper.deleteById(id);
+            if (result > 0) {
+                // 记录操作日志
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(userId);
+                log.setOperationType("DELETE");
+                log.setTargetId(id);
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("删除新闻");
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            }
             return result > 0;
-        } catch (BusinessException be) {
-            log.error("发布新闻失败，原因：{}", be.getMessage());
-            throw be;
         } catch (Exception e) {
-            log.error("发布新闻失败", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "发布新闻失败");
-        }
-    }
-
-//    @Override
-//    public boolean batchAddNews(List<News> newsList) {
-//        try {
-//            if (newsList == null || newsList.isEmpty()) {
-//                log.warn("空的新闻列表，未进行任何操作");
-//                return false;
-//            }
-//
-//            int result = newsMapper.saveBatch (newsList);
-//            if (result > 0) {
-//                log.info("成功批量添加{}条新闻", result);
-//            } else {
-//                log.error("批量添加新闻失败，结果码: {}", result);
-//                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Failed to add news in batch");
-//            }
-//        } catch (Exception e) {
-//            log.error("批量添加新闻失败，列表：{}", newsList, e);
-//            throw new RuntimeException("Failed to add news in batch", e);
-//        }
-//        return false;
-//    }
-
-
-    @Override
-    public void updateNews(News news) {
-        try {
-            newsMapper.updateById(news);
-        } catch (Exception e) {
-            log.error("Failed to update news: {}", e);
-            throw new RuntimeException("Failed to update news", e);
-        }
-    }
-
-    @Override
-    public boolean deleteNewsById(Long id) {
-        try {
-            // 使用软删除，将isdelete设置为1
-            return newsMapper.update(null,
-                    new LambdaUpdateWrapper<News>()
-                            .eq(News::getId, id)
-                            .set(News::getIsdelete, 1)
-                            .set(News::getUpdateTime, new Date())) > 0;
-        } catch (Exception e) {
-            log.error("删除新闻失败", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除新闻失败");
+            log.error("删除新闻失败: ", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除新闻失败：" + e.getMessage());
         }
     }
 
@@ -204,14 +238,67 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     }
 
     @Override
-    public void publishNews(Long newsId) {
-        updateNewsStatus(newsId, 3);
+    public void publishNews(Long newsId, Long userId) {
+        try {
+            News news = newsMapper.selectById(newsId);
+            if (news == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
+            }
+            news.setStatus(3); // 3-已发布
+            news.setUpdateTime(new Date());
+            int result = newsMapper.updateById(news);
+            if (result > 0) {
+                // 记录操作日志
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(userId);
+                log.setOperationType("PUBLISH");
+                log.setTargetId(newsId);
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("发布新闻：" + news.getTitle());
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "发布新闻失败");
+            }
+        } catch (Exception e) {
+            log.error("发布新闻失败: ", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "发布新闻失败：" + e.getMessage());
+        }
     }
 
-
     @Override
-    public void shelfNews(Long newsId) {
-        updateNewsStatus(newsId, 5);
+    public void shelfNews(Long newsId, Long userId) {
+        try {
+            News news = newsMapper.selectById(newsId);
+            if (news == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
+            }
+            news.setStatus(5); // 5-已下架
+            news.setUpdateTime(new Date());
+            int result = newsMapper.updateById(news);
+            if (result > 0) {
+                // 记录操作日志
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(userId);
+                log.setOperationType("SHELF");
+                log.setTargetId(newsId);
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("下架新闻：" + news.getTitle());
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            } else {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "下架新闻失败");
+            }
+        } catch (Exception e) {
+            log.error("下架新闻失败: ", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "下架新闻失败：" + e.getMessage());
+        }
     }
 
     /**
@@ -220,10 +307,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
      * @param statusInt  状态数字
      */
     @Override
-    public void  setStatusNews(Long newsId, int statusInt){
+    public void  setStatusNews(Long newsId, int statusInt, Long userId){
         updateNewsStatus(newsId, statusInt);
     }
-
 
     /**
      * 获取api的新闻数据
@@ -282,6 +368,62 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         } catch (Exception e) {
             log.error("Failed to get top 3 news", e);
             throw new RuntimeException("Failed to get top news", e);
+        }
+    }
+
+    @Override
+    public boolean updateNews(NewsUpdateRequest newsUpdateRequest) {
+        if (newsUpdateRequest == null || newsUpdateRequest.getId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        
+        // 检查标题和内容是否包含敏感词
+        if (sensitiveWordService.checkContentForSensitive(newsUpdateRequest.getTitle())) {
+            throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "标题包含敏感词");
+        }
+        if (sensitiveWordService.checkContentForSensitive(newsUpdateRequest.getContent())) {
+            throw new BusinessException(ErrorCode.SENSITIVE_WORDS_FOUND, "内容包含敏感词");
+        }
+        
+        // 过滤敏感词
+        String filteredTitle = sensitiveWordService.filterSensitiveWords(newsUpdateRequest.getTitle());
+        String filteredContent = sensitiveWordService.filterSensitiveWords(newsUpdateRequest.getContent());
+        
+        // 创建新闻对象
+        News news = new News();
+        news.setId(newsUpdateRequest.getId());
+        news.setTitle(filteredTitle);
+        news.setContent(filteredContent);
+        news.setCategory(newsUpdateRequest.getCategory());
+        news.setStatus(newsUpdateRequest.getStatus());
+        news.setAuthor(newsUpdateRequest.getAuthor());
+        news.setSource(newsUpdateRequest.getSource());
+        news.setCoverImage(newsUpdateRequest.getCoverImage());
+        news.setUpdateTime(new Date());
+        
+        try {
+            // 更新新闻
+            boolean result = newsMapper.updateById(news) > 0;
+            
+            if (result) {
+                // 记录操作日志
+                UserOperationLog log = new UserOperationLog();
+                log.setUserId(newsUpdateRequest.getUserId());
+                log.setOperationType("UPDATE");
+                log.setTargetId(newsUpdateRequest.getId());
+                log.setTargetType("NEWS");
+                log.setOperationTime(new Date());
+                log.setOperationDetail("更新新闻：" + newsUpdateRequest.getTitle());
+                log.setCreateTime(new Date());
+                log.setUpdateTime(new Date());
+                log.setIsDelete(0);
+                userOperationLogService.save(log);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            log.error("更新新闻失败:{}", newsUpdateRequest);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "更新新闻失败");
         }
     }
 }

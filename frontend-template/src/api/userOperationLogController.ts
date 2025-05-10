@@ -8,13 +8,17 @@ export async function getOperationHistoryUsingGet(
   params: API.getOperationHistoryUsingGETParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseListUserOperationLog_>(
+  return request<API.BaseResponsePageUserOperationLog_>(
     "/api/user/operation/history",
     {
       method: "GET",
       params: {
-        // limit has a default value: 10
-        limit: "10",
+        // current has a default value: 1
+        current: "1",
+
+        // pageSize has a default value: 10
+        pageSize: "10",
+
         ...params
       },
       ...(options || {})

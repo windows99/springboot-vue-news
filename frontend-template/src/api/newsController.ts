@@ -20,10 +20,10 @@ export async function getNewsByIdUsingGet(
 
 /** addNews POST /api/news/add */
 export async function addNewsUsingPost(
-  body: API.News,
+  body: API.NewsAddRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseString_>("/api/news/add", {
+  return request<API.BaseResponseLong_>("/api/news/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -135,7 +135,7 @@ export async function getTop3NewsByViewCountUsingGet(options?: {
 export async function updateNewsUsingPut(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.updateNewsUsingPUTParams,
-  body: API.News,
+  body: API.NewsUpdateRequest,
   options?: { [key: string]: any }
 ) {
   const { id: param0, ...queryParams } = params;

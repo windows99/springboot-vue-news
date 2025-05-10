@@ -10,10 +10,14 @@ import com.guanzhi.springbootinit.mapper.UserMapper;
 import com.guanzhi.springbootinit.model.entity.News;
 import com.guanzhi.springbootinit.model.entity.NewsFeedback;
 import com.guanzhi.springbootinit.model.entity.User;
+import com.guanzhi.springbootinit.model.entity.UserOperationLog;
 import com.guanzhi.springbootinit.model.vo.NewsFeedbackVO;
 import com.guanzhi.springbootinit.service.NewsFeedbackService;
+import com.guanzhi.springbootinit.service.NewsService;
+import com.guanzhi.springbootinit.service.UserOperationLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +42,12 @@ public class NewsFeedbackServiceImpl extends ServiceImpl<NewsFeedbackMapper, New
     @Resource
     private UserMapper userMapper;
 
+    @Autowired
+    private NewsService newsService;
+
+    @Autowired
+    private UserOperationLogService userOperationLogService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean submitFeedback(NewsFeedback feedback) {
@@ -61,6 +71,19 @@ public class NewsFeedbackServiceImpl extends ServiceImpl<NewsFeedbackMapper, New
             if (updateResult <= 0) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新新闻状态失败");
             }
+
+            // 记录操作日志
+            UserOperationLog log = new UserOperationLog();
+            log.setUserId(feedback.getUserId());
+            log.setOperationType("FEEDBACK");
+            log.setTargetId(feedback.getNewsId());
+            log.setTargetType("NEWS");
+            log.setOperationTime(new Date());
+            log.setOperationDetail("提交新闻反馈：" + feedback.getContent());
+            log.setCreateTime(new Date());
+            log.setUpdateTime(new Date());
+            log.setIsDelete(0);
+            userOperationLogService.save(log);
         }
         
         return result;
@@ -90,6 +113,19 @@ public class NewsFeedbackServiceImpl extends ServiceImpl<NewsFeedbackMapper, New
                 }
                 newsMapper.updateById(news);
             }
+
+            // 记录操作日志
+            UserOperationLog log = new UserOperationLog();
+            log.setUserId(reviewerId);
+            log.setOperationType("PROCESS_FEEDBACK");
+            log.setTargetId(feedbackId);
+            log.setTargetType("FEEDBACK");
+            log.setOperationTime(new Date());
+            log.setOperationDetail("处理新闻反馈：" + (approved ? "审核通过" : "审核失败"));
+            log.setCreateTime(new Date());
+            log.setUpdateTime(new Date());
+            log.setIsDelete(0);
+            userOperationLogService.save(log);
         }
 
         return result;

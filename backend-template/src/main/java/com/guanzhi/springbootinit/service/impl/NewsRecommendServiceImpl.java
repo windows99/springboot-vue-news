@@ -15,9 +15,9 @@ import com.guanzhi.springbootinit.service.NewsRecommendService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,16 +25,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class NewsRecommendServiceImpl implements NewsRecommendService {
 
-    @Resource
+    @Autowired
     private UserNewsViewMapper userNewsViewMapper;
     
-    @Resource
+    @Autowired
     private NewsMapper newsMapper;
     
-    @Resource
+    @Autowired
     private NewsTagMapper newsTagMapper;
     
-    @Resource
+    @Autowired
     private UserSubscriptionMapper userSubscriptionMapper;
 
     @Override
