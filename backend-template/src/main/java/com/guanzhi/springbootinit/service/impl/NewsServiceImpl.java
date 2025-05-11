@@ -95,6 +95,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         // 只查询未删除的新闻
         queryWrapper.eq("isDelete", 0);
         
+        // 按创建时间降序排序
+        queryWrapper.orderByDesc("createTime");
+        
         return queryWrapper;
     }
 
@@ -313,23 +316,25 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 获取api的新闻数据
-     *
      * @param channel
      * @return
      */
     @Override
     public JSONObject getJisunews(String channel) {
-        String host = "https://lznews.market.alicloudapi.com";
-        String path = "/lundroid/news";
+        String host = "https://jisunews.market.alicloudapi.com";
+        String path = "/news/get";
         String method = "GET";
-        String appcode = "71f6a5c816cb4e33b91615b08b10f392"; // 考虑从配置文件中读取
-
+        String appcode = "a6c46eb8c000420b93c04b549652b1bb";
         Map<String, String> headers = new HashMap<String, String>();
         //最后在header中的格式(中间是英文空格)为Authorization:APPCODE 83359fd73fe94948385f570e3c139105
         headers.put("Authorization", "APPCODE " + appcode);
+        //根据API的要求，定义相对应的Content-Type
+        headers.put("Content-Type", "application/json; charset=UTF-8");
         Map<String, String> querys = new HashMap<String, String>();
-        querys.put("channel", channel);
-        querys.put("page", "1");
+        querys.put("channel", "头条");
+        querys.put("num", "10");
+        querys.put("start", "0");
+
 
         try {
             HttpResponse response = HttpUtils.doGet(host, path, method, headers, querys);

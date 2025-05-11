@@ -33,10 +33,10 @@
 
       <!-- 评论列表 -->
       <el-table :data="commentList" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="newsTitle" label="新闻标题" width="200" />
-        <el-table-column prop="content" label="评论内容" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="username" label="评论用户" width="120" />
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column prop="newsTitle" label="新闻标题"  />
+        <el-table-column prop="content" label="评论内容"  show-overflow-tooltip />
+        <el-table-column prop="username" label="评论用户" width="200" />
         <el-table-column prop="createTime" label="评论时间" width="160" />
         <el-table-column prop="likeNum" label="点赞数" width="80" />
         <el-table-column label="操作" width="180">
@@ -229,9 +229,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.comment-manage-container {
-  padding: 20px;
-}
+
 
 .card-header {
   display: flex;

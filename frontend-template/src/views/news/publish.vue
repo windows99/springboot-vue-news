@@ -32,12 +32,7 @@
             </el-form-item>
           </el-col>
 
-          <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
-            <el-form-item label="发布时间">
-              <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期"
-                end-placeholder="结束日期" value-format="YYYY-MM-DD" />
-            </el-form-item>
-          </el-col>
+          
 
           <el-col :xs="24" :sm="24" :md="24" :lg="4" :xl="4">
             <div class="flex gap-2">

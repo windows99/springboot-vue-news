@@ -41,18 +41,18 @@
 
       <!-- 推送记录表格 -->
       <el-table :data="recordsList" v-loading="recordsLoading" style="width: 100%">
-        <el-table-column prop="newsPush.id" label="ID" width="80" />
+        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="newsId" label="新闻ID" width="180" />
         <el-table-column prop="newsTitle" label="新闻标题" />
         <el-table-column label="推送时间" width="180">
           <template #default="scope">
-            {{ formatDate(scope.row.newsPush.pushTime) }}
+            {{ formatDate(scope.row.pushTime) }}
           </template>
         </el-table-column>
         <el-table-column label="推送类型" width="120">
           <template #default="scope">
-            <el-tag :type="getPushTypeTag(scope.row.newsPush.pushType)">
-              {{ getPushTypeText(scope.row.newsPush.pushType) }}
+            <el-tag :type="getPushTypeTag(scope.row.pushType)">
+              {{ getPushTypeText(scope.row.pushType) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -168,17 +168,17 @@
         </div>
         <div class="detail-item">
           <span class="label">推送类型：</span>
-          <el-tag :type="getPushTypeTag(recordDetail.newsPush.pushType)">
-            {{ getPushTypeText(recordDetail.newsPush.pushType) }}
+          <el-tag :type="getPushTypeTag(recordDetail.pushType)">
+            {{ getPushTypeText(recordDetail.pushType) }}
           </el-tag>
         </div>
         <div class="detail-item">
           <span class="label">推送时间：</span>
-          <span>{{ formatDate(recordDetail.newsPush.pushTime) }}</span>
+          <span>{{ formatDate(recordDetail.pushTime) }}</span>
         </div>
         <div class="detail-item">
           <span class="label">创建时间：</span>
-          <span>{{ formatDate(recordDetail.newsPush.createTime) }}</span>
+          <span>{{ formatDate(recordDetail.createTime) }}</span>
         </div>
         <div class="detail-item" v-if="recordDetail.newsCoverImage">
           <span class="label">新闻封面：</span>
@@ -399,14 +399,15 @@ const loadPushRecords = async () => {
       }
     })
     if (res.code === 0) {
-      recordsList.value = res.data.records
-      recordsTotal.value = Number(res.data.total)
-      console.log('推送记录数据:', {
-        current: recordsSearchForm.current,
-        pageSize: recordsSearchForm.pageSize,
-        total: recordsTotal.value,
-        records: recordsList.value
+      let data = res.data.records.map(item=>{
+        return {
+          ...item.newsPush,
+          newsTitle: item.newsTitle
+        }
       })
+      console.log(data)
+      recordsList.value = data
+      recordsTotal.value = Number(res.data.total)
     }
   } catch (error) {
     console.error('加载推送记录错误', error)
@@ -525,9 +526,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.news-push-container {
-  padding: 20px;
-}
+
 
 .card-header {
   display: flex;

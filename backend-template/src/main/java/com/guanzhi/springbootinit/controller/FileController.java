@@ -42,7 +42,6 @@ public class FileController {  // 文件上传控制器
 
     /**
      * 文件上传
-     *
      * @param multipartFile
      * @param uploadFileRequest
      * @param request
@@ -76,16 +75,8 @@ public class FileController {  // 文件上传控制器
             file = File.createTempFile(filepath, null);
             // 将上传文件转存到临时文件
             multipartFile.transferTo(file);
-            
-            // 尝试压缩图片文件
-//            CompressFile compressFile = imageCompressorServiceImpl.tryCompressImage(file);
-            fileManager.putObject(filepath, file);
-//            if (compressFile != null) {  // 压缩成功则上传压缩后的内容
-//                fileManager.putObjectByBytes(filepath, compressFile.getContent());
-//            } else {  // 无需压缩则直接上传原文件
-//                fileManager.putObject(filepath, file);
-//            }
 
+            fileManager.putObject(filepath, file);
 
             // 返回完整的文件访问地址
             return ResultUtils.success(fileManager.getPathPrefix() + filepath);
