@@ -65,7 +65,7 @@ public class NewsPushController {
         return ResultUtils.success(result);
     }
 
-    /**
+    /**@
      * 批量推送新闻
      * 
      * 前端需要传递的参数：
@@ -119,7 +119,10 @@ public class NewsPushController {
     @PostMapping("/personalized")
     public BaseResponse<Integer> pushPersonalized(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
-        Long userId = loginUser.getId();
+        // 添加管理员权限验证
+        if (!userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "仅管理员可执行此操作");
+        }
         
         // 获取参数
         Integer limit = 5; // 默认推送5条
@@ -127,10 +130,16 @@ public class NewsPushController {
             limit = Integer.parseInt(params.get("limit").toString());
         }
         
-        // 执行个性化推送
-        int result = newsPushService.pushPersonalizedNews(userId, limit);
+        // 获取所有用户ID
+        List<Long> userIds = userService.getAllUserIds();
         
-        return ResultUtils.success(result);
+        // 执行所有用户的个性化推送
+        int totalPushed = 0;
+        for (Long userId : userIds) {
+            totalPushed += newsPushService.pushPersonalizedNews(userId, limit);
+        }
+        
+        return ResultUtils.success(totalPushed);
     }
 
     /**

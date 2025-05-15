@@ -385,13 +385,14 @@ const handleViewComment = (row: any) => {
 }
 
 const handleDeleteComment = async (id: number) => {
+  console.log('删除评论', id)
   try {
     await ElMessageBox.confirm('确定要删除这条评论吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteCommentByIdUsingDelete(id)
+    await deleteCommentByIdUsingDelete({id:id})
     ElMessage.success('删除成功')
     fetchComments()
   } catch (error) {
